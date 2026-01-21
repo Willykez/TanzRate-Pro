@@ -1,6 +1,8 @@
 # Tanzania Forex Pro
+![Screenshot_20260121-153235_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/96543162-bbee-431b-8f70-cdb8552b48a4)
 
 **Tanzania Forex Pro** is a comprehensive, real-time currency exchange application designed specifically for Tanzanian users. Track live forex rates, convert currencies, and monitor market trends with an elegant, user-friendly interface.
+![Screenshot_20260121-153327_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/4f66ec50-ff2d-478e-973c-45ce86b2f5a8)
 
 ## Features
 
@@ -10,6 +12,7 @@
 - Support for major world currencies (USD, EUR, GBP, JPY, CNY, INR, AED, ZAR)
 - East African regional currencies (KES, UGX, RWF)
 - Precious metals pricing (Gold XAU, Silver XAG)
+![Screenshot_20260121-153221_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/ae03421e-66f0-4b2e-8714-03f4ea6481d8)
 
 ### Smart Currency Converter
 - Bi-directional conversion between any supported currencies
@@ -17,12 +20,14 @@
 - Quick swap functionality
 - Clean, intuitive interface
 - Support for decimal precision
+![Screenshot_20260121-153235_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/87541f40-5428-4256-a0cd-4f7e08b9beb6)
 
 ### Market Insights
 - 7-day USD/TZS trend visualization
 - Change indicators (percentage & absolute values)
 - Bank rate comparisons for major Tanzanian banks
 - Detailed currency information on tap
+![Screenshot_20260121-153348_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/1f9f94d3-7b33-4343-89c7-bdf20d1e998f)
 
 ### Customization
 - Configurable auto-refresh intervals
@@ -256,6 +261,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+![Screenshot_20260121-153327_transfer_2026-01-21_153950](https://github.com/user-attachments/assets/fa97b6b8-b862-42b2-ac21-46dcdb7f64b7)
+
 
 ## Author
 
