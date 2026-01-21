@@ -50,12 +50,16 @@
 ## API Integration
 
 ### ExchangeRate-API (v6)
-- **Endpoint**: `https://v6.exchangerate-api.com/v6/[API_KEY]/latest/USD`
+- **Endpoint**: `API Key: 56bff02e7e890d6fae47bb57
+Example Request: https://v6.exchangerate-api.com/v6/56bff02e7e890d6fae47bb57`
 - **Purpose**: Real-time currency exchange rates
 - **Update Frequency**: Configurable (1-30 minutes)
 
 ### MetalPriceAPI
-- **Endpoint**: `https://api.metalpriceapi.com/v1/latest`
+- **Endpoint**: `https://api.metalpriceapi.com/v1/latest
+  ?api_key=28b227b94a7053b0c52456cd3f453c09
+  &base=USD
+  &currencies=EUR,XAU,XAG`
 - **Purpose**: Gold and Silver prices
 - **Currencies**: XAU (Gold), XAG (Silver)
 
@@ -70,7 +74,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/tanzania-forex-pro.git
+   git clone https://github.com/Willykez/TanzRate-Pro.git
    cd tanzania-forex-pro
    ```
 
@@ -81,18 +85,15 @@
    - Create `local.properties` file
    - Add your API keys:
      ```properties
-     EXCHANGE_API_KEY=your_exchange_api_key
-     METAL_API_KEY=your_metal_api_key
-     ```
-
-4. **Build the project**
+     EXCHANGE_API_KEY=56bff02e7e890d6fae47bb57
+     METAL_API_KEY=28b227b94a7053b0c52456cd3f453c0ourusername/4. **Build the project**
    - Build → Make Project (Ctrl+F9)
 
 5. **Run on device/emulator**
    - Run → Run 'app' (Shift+F10)
 
 ### Install APK
-Download the latest APK from [Releases](https://github.com/yourusername/tanzania-forex-pro/releases)
+Download the latest APK from [Releases](https://github.com/Willykez/TanzRate-Pro/releases)
 
 ## Supported Currencies
 
@@ -259,8 +260,8 @@ SOFTWARE.
 ## Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: tanzaniaforexpro@gmail.com
+- GitHub: [@willykez](https://github.com/willykez)
+- Email: willykez01@gmail.com
 
 ## Acknowledgments
 
@@ -288,8 +289,8 @@ For official exchange rates, please consult:
 ## Support
 
 For support, bug reports, or feature requests:
-- **Email**: tanzaniaforexpro@gmail.com
-- **Issues**: [GitHub Issues](https://github.com/yourusername/tanzania-forex-pro/issues)
+- **Email**: willykez@gmail.com
+- **Issues**: [GitHub Issues](https://github.com/Willykez/TanzRate-Pro/issues)
 
 ---
 
