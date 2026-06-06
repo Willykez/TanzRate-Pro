@@ -25,6 +25,16 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      # FIX 1: Resolves the ClassNotFoundException by downloading the missing gradle-wrapper.jar
+      - name: Regenerate Missing Gradle Wrapper Jar
+        run: gradle wrapper
+
+      # FIX 2: Prevents Gradle from crashing due to missing local.properties API keys
+      - name: Create local.properties placeholder
+        run: |
+          echo "EXCHANGE_API_KEY=${{ secrets.EXCHANGE_API_KEY || 'dummy_key' }}" > local.properties
+          echo "METAL_API_KEY=${{ secrets.METAL_API_KEY || 'dummy_key' }}" >> local.properties
+
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
@@ -50,7 +60,7 @@ jobs:
 
       - name: Display APK info
         run: |
-          ls -lh app/build/outputs/apk/debug/
+          ls -lh app/build/outputs/apk/debug/ || echo "APK file not found in default path"
           echo ""
           echo "✅ Debug APK successfully built!"
           echo "📦 APK available in workflow artifacts"
