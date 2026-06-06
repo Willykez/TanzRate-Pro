@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher icon vector drawable.
+  Replace with the actual branded icon before release.
+  This provides a compilable placeholder in the absence of PNG assets.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Dark navy background -->
+    <path
+        android:fillColor="#0D1230"
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
+
+    <!-- Gold ring -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFD700"
+        android:strokeWidth="5"
+        android:pathData="M54,10 A44,44 0 1,1 53.99,10 Z" />
+
+    <!-- TZ letters -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M28,38 L52,38 L28,70 L52,70"
+        android:strokeWidth="5"
+        android:strokeColor="#FFD700"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M60,38 L80,38 M70,38 L70,70"
+        android:strokeWidth="5"
+        android:strokeColor="#FFD700"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"/>
+</vector>

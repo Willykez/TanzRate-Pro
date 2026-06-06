@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      TanzRate uses a fully programmatic UI built in TanzaniaForexApp.java.
+      This theme provides the minimum required by the Activity window.
+    -->
+    <style name="Theme.TanzRate" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Status bar color is set programmatically to match the app theme -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">@android:color/black</item>
+        <item name="android:navigationBarColor">@android:color/black</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>
