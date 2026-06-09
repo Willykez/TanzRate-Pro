@@ -1,13 +1,10 @@
-name: Build Debug APK
+name: Build Debug APK — TanzRate Pro v4.0.0
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main, develop]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -25,27 +22,18 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      # Fixes the ClassNotFoundException by downloading the missing gradle-wrapper.jar
-      - name: Regenerate Missing Gradle Wrapper Jar
+      - name: Regenerate Gradle Wrapper Jar
         run: gradle wrapper --gradle-version 8.4
 
-      # Prevents Gradle from crashing due to missing local.properties API keys
-      - name: Create local.properties placeholder
+      - name: Create local.properties
         run: |
-          echo "EXCHANGE_API_KEY=${{ secrets.EXCHANGE_API_KEY || 'dummy_key' }}" > local.properties
-          echo "METAL_API_KEY=${{ secrets.METAL_API_KEY || 'dummy_key' }}" >> local.properties
+          echo "EXCHANGE_API_KEY=${{ secrets.EXCHANGE_API_KEY }}" > local.properties
+          echo "METAL_API_KEY=${{ secrets.METAL_API_KEY }}" >> local.properties
 
-      # FIXED: Dynamically updates minSdk to 26 to satisfy the <adaptive-icon> compiler requirement
-      - name: Force minSdk to 26
+      - name: Force minSdk to 26 (adaptive-icon requirement)
         run: |
-          if [ -f app/build.gradle ]; then
-            sed -i 's/minSdk [0-9]*/minSdk 26/g' app/build.gradle
-            sed -i 's/minSdkVersion [0-9]*/minSdkVersion 26/g' app/build.gradle
-          fi
-          if [ -f app/build.gradle.kts ]; then
-            sed -i 's/minSdk = [0-9]*/minSdk = 26/g' app/build.gradle.kts
-            sed -i 's/minSdkVersion(.*)/minSdkVersion(26)/g' app/build.gradle.kts
-          fi
+          sed -i 's/minSdk [0-9]*/minSdk 26/g' app/build.gradle || true
+          sed -i 's/minSdkVersion [0-9]*/minSdkVersion 26/g' app/build.gradle || true
 
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
@@ -56,23 +44,17 @@ jobs:
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: TanzRate-Pro-v2.3.0-debug
+          name: TanzRate-Pro-v4.0.0-debug
           path: app/build/outputs/apk/debug/*.apk
           retention-days: 30
 
-      - name: Create release notes
+      - name: Build summary
         run: |
-          echo "## TanzRate Pro v2.3.0 - Debug Build" > release_notes.md
-          echo "" >> release_notes.md
-          echo "**Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> release_notes.md
-          echo "**Commit:** ${{ github.sha }}" >> release_notes.md
-          echo "**Branch:** ${{ github.ref_name }}" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "This is a debug build. Use only for testing and development purposes." >> release_notes.md
-
-      - name: Display APK info
-        run: |
-          ls -lh app/build/outputs/apk/debug/ || echo "APK file not found in default path"
-          echo ""
-          echo "✅ Debug APK successfully built!"
-          echo "📦 APK available in workflow artifacts"
+          echo "## TanzRate Pro v4.0.0 Debug Build" > $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          ls -lh app/build/outputs/apk/debug/ || true
+          echo "✅ Debug APK built successfully"
