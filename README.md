@@ -1,84 +1,68 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.3.0-FFD700?style=for-the-badge&labelColor=0A0E27"/>
+  <img src="https://img.shields.io/badge/Version-4.0.0-FFD700?style=for-the-badge&labelColor=0A0E27"/>
   <img src="https://img.shields.io/badge/Android-5.0%2B-4CAF50?style=for-the-badge&logo=android&logoColor=white"/>
   <img src="https://img.shields.io/badge/Language-Java-F44336?style=for-the-badge&logo=openjdk&logoColor=white"/>
   <img src="https://img.shields.io/badge/License-MIT-2196F3?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Ads-None-9C27B0?style=for-the-badge"/>
 </p>
 
-<h1 align="center">🇹🇿 TanzRate Pro</h1>
-<p align="center"><strong>Real-time Tanzania Shilling Forex Tracker</strong></p>
+<h1 align="center">🇹🇿 TanzRate Pro — FXetcher v4</h1>
+<p align="center"><strong>Real-time Tanzania Shilling Forex Tracker · Complete Ground-Up Rewrite</strong></p>
 <p align="center">
-  Live exchange rates · BoT official data · Price alert notifications · Home screen widget · Light & dark themes
+  Live exchange rates · BoT official data · Price alert notifications · 5-tab modular UI · Precious metals · Forex calculator · Light & dark themes
 </p>
 
 ---
 
-## 📱 Screenshots
-
-<p align="center">
-  <img src="Screenshot_20260121-153221.jpg" width="260" alt="TanzRate Pro Screenshot"/>
-</p>
+> ⚠️ **v4.0.0 is a full architectural rewrite.** Package name, launcher icon, app structure, and all source files have changed. See the [Migration Notice](#-migration-notice-v23--v40) section before upgrading.
 
 ---
 
-## ✨ What's New — v2.3.0
+## 📦 What Changed vs v2.3.0
+
+| | Change | v2.3.0 | v4.0.0 |
+|---|---|---|---|
+| 📦 | **Package name** | `com.willykez.tanzsx` | `com.willykez.fxetcher` |
+| 🏷️ | **App name** | `TanzRate Pro` | `Fxetcher` |
+| 🎨 | **Launcher icon** | Adaptive XML (mipmap set) | Custom adaptive icon with new foreground + PNG in `mipmap-xhdpi` |
+| 🏗️ | **Architecture** | Single monolithic `TanzaniaForexApp.java` | Modular multi-file: `FXetcherApp` + `HomeScreen` + `Screens` + `CalcScreen` + `UiKit` + `Tokens` |
+| 🗂️ | **Source layout** | `com.willykez.tanzsx.*` | `com.willykez.fxetcher.*` |
+| 📱 | **Widget** | `RateWidget.java` (AppWidgetProvider) | **Removed** — no home-screen widget in v4 |
+| 🎨 | **Theme engine** | `Theme` inner class | `Tokens.java` — Material3-mirrored design token system |
+| 📐 | **UI construction** | Mix of XML + Java | Fully code-driven via `UiKit.java` (no XML activities) |
+| 🔢 | **Currencies** | 14 | **25** (see full list below) |
+| 🧮 | **Calculator** | None | `CalcScreen` — full forex keypad + history |
+| ⭐ | **Watchlist** | Pinned conversions strip | Long-press any tile → Watchlist card in Markets tab |
+| 🔔 | **Notifications** | 3 channels (alerts / updates / widget) | 2 channels: `price_alerts` (HIGH) · `rate_updates` (LOW) |
+| 🌀 | **Loading state** | Pulsing skeleton cards | `ShimmerFrameLayout` via `com.facebook.shimmer:shimmer:0.5.0` |
+| 🔄 | **Pull-to-refresh** | Manual refresh button | `SwipeRefreshLayout` (tri-color: gold, blue, green) |
+| 📊 | **targetSdkVersion** | 35 | **36** |
+
+---
+
+## ✨ What's New in v4.0.0
 
 | | Feature | Detail |
 |---|---|---|
-| 🎨 | **Adaptive Themes** | Full light & dark mode — every colour, card, input, and background derives from a single `Theme` inner class |
-| 📱 | **Home Screen Widget** | Live USD, EUR, GBP, KES rates on your Android launcher; updates every 30 min via `RateWidget.java` |
-| 🔔 | **Rich Notifications** | Price alert hits post a styled notification with custom icon, progress bar, and quick-action buttons |
-| 🏦 | **Official BoT Rates** | Buy/sell rates scraped live from [bot.go.tz](https://www.bot.go.tz/ExchangeRate/excRates) via Jsoup |
-| ✨ | **Smart Dashboard** | "For You" card learns from your conversion habits and shows trending currency tips |
-| ⚙️ | **Custom Dashboard** | Drag-reorder all home screen sections and persist the layout to preferences |
-| ⭐ | **Pinned Conversions** | Save frequent conversions as quick-access chips; long-press to remove |
-| 💀 | **Skeleton Loading** | Pulsing placeholder cards show while data loads on first launch |
-| 🛡️ | **Full Error Handling** | Offline detection, API fallbacks, null-safe UI refs, JSON parse guards everywhere |
-
----
-
-## 🚀 Features
-
-### 📈 Live Exchange Rates
-- Auto-refresh every 1 – 60 minutes (configurable)
-- **9 major currencies** vs TZS: USD, EUR, GBP, JPY, CNY, INR, AED, ZAR, KES
-- **East African regional** currencies: KES, UGX, RWF, ZAR, AED
-- **Precious metals** per troy ounce: Gold (XAU) · Silver (XAG)
-- Animated ▲/▼ change indicators with colour flash on each row
-
-### 💱 Smart Currency Converter
-- Live real-time calculation as you type (no Convert button needed)
-- 14 currencies in both directions with inverse rate display
-- One-tap swap with rotation animation
-- Quick-amount chips: 10 · 50 · 100 · 500 · 1K · 5K · 10K · 50K
-- Copy result to clipboard · Pin favourite conversions · Save to history
-
-### 📊 Markets Tab
-- 3×3 currency grid with flag-icon tiles and live rates
-- Price alert system — set above/below targets for any currency
-- Tap any tile to open an instant conversion dialog
-
-### 🏦 Official Bank of Tanzania Rates
-- Live-scraped from [bot.go.tz](https://www.bot.go.tz) using **Jsoup**
-- Shows official buy and sell prices in TZS
-- Manual refresh with last-updated timestamp
-- Clearly sourced — no estimated spreads
-
-### 📱 Home Screen Widget
-- Displays USD, EUR, GBP, KES at a glance without opening the app
-- Custom `Canvas`-drawn gradient design with gold accents
-- Auto-refreshes every 30 minutes · Tap to launch the app
-
-### 🔔 Price Alert Notifications
-- Set rate thresholds for any currency (above or below)
-- Rich notifications: custom icon, progress bar, action buttons
-- Notification channels: alerts (HIGH) · updates (LOW) · widget (MIN)
-
-### 🎨 Light & Dark Themes
-- Midnight navy dark mode · Clean white light mode
-- Every colour derived from a single `Theme` inner class
-- Visual preview tiles in Settings → Appearance
+| 🏗️ | **Full Modular Architecture** | App split across `FXetcherApp`, `HomeScreen`, `Screens` (Convert / Markets / Settings), `CalcScreen`, `UiKit`, `Tokens`, `CurrencyMeta`, `AlertNotificationManager` |
+| 🎨 | **Design Token System** | `Tokens.java` — every colour, spacing, radius, and typography constant in one file; two themes (dark default, light) swapped via `Tokens.apply(isDark)` |
+| 🖌️ | **UiKit Component Library** | `UiKit.java` — reusable `card()`, `tv()`, `divider()`, `topPill()`, `sectionHeader()`, `rippleOver()`, `scaleAnim()`, `snack()`, and more — all programmatic, zero XML activities |
+| 💱 | **25-Currency Coverage** | Expanded from 14 → 25: USD EUR GBP JPY CNY INR AED ZAR KES TZS UGX RWF + precious metals XAU/XAG + CAD CHF SGD MYR SAR QAR BRL MXN NGN EGP ETB |
+| 🌍 | **Africa Tab** | Dedicated East/Central African currency section on the Home screen (KES, UGX, RWF, ZAR, AED, NGN, EGP, ETB) |
+| 💰 | **Precious Metals Extended** | Gold & Silver shown per troy ounce, gram, and kilogram with tap-to-drill metal bottom sheet |
+| 🧮 | **Forex Calculator (`CalcScreen`)** | Dedicated calculator tab — numeric keypad, currency chip selector, swap direction, live rate card, last-20-calculations history with clear |
+| ⭐ | **Watchlist (Markets Tab)** | Long-press any major currency tile to pin it; persistent across sessions via `SharedPreferences` |
+| 🔔 | **Price Alert System** | Set above/below thresholds per currency; alerts fire as HIGH-priority notifications with colour-coded icons |
+| 🏦 | **BoT Official Rates (Home)** | Live buy/sell table scraped from `bot.go.tz` using Jsoup; cached, pull-to-refresh, timestamped |
+| 🌀 | **Shimmer Loading Skeleton** | `ShimmerFrameLayout` placeholder rows shown while first fetch completes |
+| 🔄 | **Pull-to-Refresh** | `SwipeRefreshLayout` on Home refreshes both live rates and BoT table simultaneously |
+| ⚡ | **Quick Convert Bottom Sheet** | Tap any top-bar pill (USD · EUR · XAU) to open an inline converter without leaving the current screen |
+| 🥇 | **Metal Detail Bottom Sheet** | Tap the Gold pill or any metals row for a full oz/gram/kg breakdown with accent-coloured card |
+| ⏱️ | **Auto-Refresh** | Toggle in top bar; configurable 1–60 min interval; `ScheduledExecutorService` with `ConcurrentHashMap` for thread-safe rate storage |
+| 🌗 | **Dark / Light Theme** | Full dual-theme support; preference persisted; all colours from `Tokens` — no hardcoded values in UI code |
+| 📋 | **Calculator History** | Last 20 forex calculations stored as JSON in `SharedPreferences`; clearable |
+| 📎 | **Copy to Clipboard** | Tap copy icon on converter result or calculator result |
+| 📡 | **Dual Data Sources** | Primary: ExchangeRate-API (forex) + MetalPriceAPI (metals); secondary: Bank of Tanzania live scrape |
 
 ---
 
@@ -86,19 +70,75 @@
 
 ```
 TanzRate-Pro/
-├── TanzaniaForexApp.java          # Main single-Activity app (1 330 lines)
-│     ├── class AC                 #   Colour constants
-│     ├── class AP                 #   SharedPreferences keys
-│     ├── class CM                 #   Currency metadata (codes, flags, symbols)
-│     ├── class Theme              #   Full light/dark colour palette
-│     └── class BotRate            #   BoT scraped row model
-├── AlertNotificationManager.java  # Styled notification builder (260 lines)
-├── RateWidget.java                # AppWidgetProvider — Canvas-drawn widget (207 lines)
-├── rate_widget_layout.xml         # Widget layout (ImageView container)
-├── rate_widget_info.xml           # AppWidgetProviderInfo metadata
-├── STORE_LISTING.md               # Full Google Play Store listing + changelog
-└── README.md                      # This file
+└── app/src/main/java/com/willykez/fxetcher/
+    ├── FXetcherApp.java            # Root Activity — top bar, nav bar, tab switching, fetch orchestration
+    ├── HomeScreen.java             # Home tab — shimmer, live rates grid, BoT table, metals, pull-to-refresh
+    ├── Screens.java                # ConvertScreen · MarketsScreen · SettingsScreen (all in one file)
+    ├── CalcScreen.java             # Forex Calculator tab — keypad, currency chips, history
+    ├── AlertNotificationManager.java # Notification channels, rate-update + price-alert builders
+    ├── CurrencyMeta.java           # Single source of truth: 25 currency codes, names, symbols, flags
+    ├── Tokens.java                 # Design token system: colours, spacing, typography (dark + light)
+    ├── UiKit.java                  # Programmatic UI component library (card, tv, pill, anim, etc.)
+    ├── FileUtil.java               # File I/O helpers
+    ├── SketchwareUtil.java         # Utility helpers
+    ├── MainActivity.java           # Thin launcher → delegates to FXetcherApp
+    └── willykez.java               # Application subclass (app-level init)
+└── app/src/main/res/
+    ├── drawable/
+    │   ├── ic_launcher.xml             # Adaptive icon definition
+    │   ├── ic_launcher_foreground.xml  # Vector foreground layer
+    │   └── ic_launcher_background.xml  # Vector background layer
+    ├── mipmap-xhdpi/
+    │   └── ic_launcher.png             # Raster launcher icon (xhdpi)
+    ├── layout/
+    │   ├── main.xml                    # Root FrameLayout for activity
+    │   └── shimmer_item.xml            # Shimmer placeholder row layout
+    └── values/
+        ├── strings.xml                 # App name: "Fxetcher"
+        ├── colors.xml
+        └── styles.xml
 ```
+
+---
+
+## 🚀 Features
+
+### 🏠 Home Tab
+- Pull-to-refresh (`SwipeRefreshLayout`) for both live rates + BoT data
+- **Shimmer loading skeleton** on first launch
+- Live rate rows with animated ▲/▼ change indicators (colour flash)
+- **East Africa section** — regional currencies at a glance
+- **Precious Metals card** — Gold & Silver per oz, gram, kg
+- **Bank of Tanzania official rates** — scraped live, cached, timestamped
+
+### 💱 Convert Tab
+- Live real-time calculation as you type
+- 25 currencies, both directions, inverse rate
+- One-tap swap with rotation animation
+- Quick-amount chips (10 · 50 · 100 · 500 · 1K · 5K · 10K · 50K)
+- Conversion history (last 20), clearable
+- Copy result to clipboard
+
+### 📊 Markets Tab
+- Watchlist — long-press any tile to pin/unpin; persisted
+- Major currencies grid — flag tiles, live rate, trend arrow
+- Africa card — EAC + West/North Africa rates
+- Precious metals extended card
+- **Price Alert system** — set above/below targets; fires HIGH-priority notification
+
+### 🧮 Calc Tab
+- Forex-specific numeric keypad
+- Currency chip selector (scrollable)
+- Swap direction (to/from TZS)
+- Live exchange rate reference card
+- Last 20 calculations stored in `SharedPreferences`; clearable
+
+### ⚙️ Settings Tab
+- Auto-refresh toggle + interval picker (1 – 60 min)
+- Dark / Light theme toggle
+- Notification preferences
+- Data source info (API keys + BoT)
+- Clear cached rates
 
 ---
 
@@ -107,104 +147,105 @@ TanzRate-Pro/
 ### Requirements
 - **Android Studio** or **Sketchware Pro**
 - **minSdkVersion 21** (Android 5.0 Lollipop)
-- **targetSdkVersion 35**
+- **targetSdkVersion 36**
 - Java source compatibility
 
-### Dependencies (add to your build)
+### Dependencies
 
 ```gradle
-// Jsoup — for BoT web scraping
-implementation 'org.jsoup:jsoup:1.17.2'
-
-// AndroidX Core + Notifications
-implementation 'androidx.core:core:1.12.0'
+implementation 'androidx.appcompat:appcompat:1.7.1'
+implementation 'com.google.android.material:material:1.12.0'
+implementation 'com.facebook.shimmer:shimmer:0.5.0'
+implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+implementation 'org.jsoup:jsoup:1.17.2'       // BoT live scraping
 ```
 
-### AndroidManifest.xml additions
+### AndroidManifest permissions
 
 ```xml
-<!-- Permissions -->
 <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-<!-- Home screen widget receiver -->
-<receiver android:name=".RateWidget" android:exported="true">
-    <intent-filter>
-        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
-    </intent-filter>
-    <meta-data
-        android:name="android.appwidget.provider"
-        android:resource="@xml/rate_widget_info"/>
-</receiver>
-```
-
-### Place XML files
-```
-res/layout/rate_widget_layout.xml   ← widget ImageView container
-res/xml/rate_widget_info.xml        ← widget metadata
 ```
 
 ---
 
 ## 🔑 API Keys
 
-> ⚠️ **Move these to `BuildConfig` or a secrets manager before any public release.**
+> ⚠️ Move these to `BuildConfig` or a secrets manager before any public release.
 
-| Service | Used for | Free tier |
-|---|---|---|
-| [ExchangeRate-API](https://exchangerate-api.com) | Forex rates (14 currencies) | 1 500 req/month |
-| [MetalPriceAPI](https://metalpriceapi.com) | Gold & Silver spot prices | 100 req/month |
-| [Bank of Tanzania](https://www.bot.go.tz/ExchangeRate/excRates) | Official buy/sell rates | Open web scrape |
+| Service | Endpoint | Used for | Free tier |
+|---|---|---|---|
+| [ExchangeRate-API](https://exchangerate-api.com) | `v6.exchangerate-api.com/v6/.../latest/USD` | 25-currency forex rates | 1,500 req/month |
+| [MetalPriceAPI](https://metalpriceapi.com) | `api.metalpriceapi.com/v1/latest` | Gold (XAU) & Silver (XAG) | 100 req/month |
+| [Bank of Tanzania](https://www.bot.go.tz/ExchangeRate/excRates) | `bot.go.tz/ExchangeRate/excRates` | Official buy/sell TZS rates | Open web scrape |
+
+---
+
+## 🔄 Migration Notice — v2.3.0 → v4.0.0
+
+| Step | Action |
+|---|---|
+| 1 | **Uninstall** the old `com.willykez.tanzsx` build before installing v4 — package name changed, they will not conflict but will coexist as separate apps |
+| 2 | **No `RateWidget`** in v4 — remove the old widget from your home screen before upgrading |
+| 3 | **SharedPreferences** from v2.x are under a different package and will not carry over automatically |
+| 4 | Update your `build.gradle` `applicationId` to `com.willykez.fxetcher` |
+| 5 | Remove any references to `com.willykez.tanzsx` package in manifests or deep-link URIs |
 
 ---
 
 ## 📋 Changelog
 
-### v2.3.0 — Smart, Themed & Widget-Ready *(current)*
-- `NEW` Adaptive light/dark theme engine (`Theme` inner class)
-- `NEW` Home screen widget (`RateWidget.java` + Canvas Bitmap rendering)
-- `NEW` Rich price-alert notifications (`AlertNotificationManager.java`)
-- `NEW` Smart "For You" dashboard card with usage-based suggestions
-- `NEW` Drag-reorder customisable dashboard layout (persisted to prefs)
-- `NEW` Pinned conversions horizontal strip
-- `NEW` Skeleton loading animation on first launch
-- `FIX` `ClassCastException` crash in metals card — replaced child-index casts with `setTag` / `getTag`
-- `FIX` `CompoundButton` lambda compile error — custom `OnToggle` interface
-- `FIX` Full offline mode — `isOnline()` check before every network call
-- `FIX` All UI refs null-checked; JSON parsing guarded throughout
+### v4.0.0 — FXetcher · Complete Rewrite *(current)*
+- `BREAKING` Package renamed: `com.willykez.tanzsx` → `com.willykez.fxetcher`
+- `BREAKING` App name changed: `TanzRate Pro` → `Fxetcher`
+- `BREAKING` Launcher icon replaced with new adaptive icon + PNG asset
+- `BREAKING` Home screen widget (`RateWidget`) removed
+- `NEW` Fully modular architecture: 12 source files vs 1 monolith
+- `NEW` `Tokens.java` design token system (Material3-mirrored naming)
+- `NEW` `UiKit.java` programmatic component library
+- `NEW` `CalcScreen` — dedicated forex calculator tab with history
+- `NEW` 25-currency support (was 14); added CAD, CHF, SGD, MYR, SAR, QAR, BRL, MXN, NGN, EGP, ETB
+- `NEW` Africa regional currency card (Home + Markets)
+- `NEW` Watchlist — long-press to pin any currency; persisted
+- `NEW` Shimmer loading skeleton via `facebook/shimmer`
+- `NEW` SwipeRefreshLayout pull-to-refresh on Home
+- `NEW` Quick-convert bottom sheet from top bar pills
+- `NEW` Metal detail bottom sheet (oz / gram / kg)
+- `NEW` `targetSdkVersion` bumped to 36
+- `CHANGE` Notification channels reduced from 3 to 2 (widget channel removed with widget)
+
+### v2.3.0 — Smart, Themed & Widget-Ready
+- Adaptive light/dark theme engine
+- Home screen widget (`RateWidget.java`)
+- Rich price-alert notifications
+- Smart "For You" dashboard card
+- Drag-reorder customisable layout
+- Skeleton loading animation
 
 ### v2.2.0 — BoT Scraping & Notifications
-- Live BoT rates scraped from bot.go.tz using Jsoup
-- `AlertNotificationManager` with channel setup and branded icons
-- `setLineSpacingMultiplier` → `setLineSpacing(0f, 1.4f)` compile fix
+- Live BoT rates via Jsoup
+- `AlertNotificationManager` with channel setup
 
 ### v2.1.0 — Converter History & Quick Amounts
-- Conversion history (last 20), properly clearable
-- Quick-amount chips, clipboard copy, share intent
-- Price alerts stored in SharedPreferences JSON
-- Surgical UI updates — no full `removeAllViews` rebuild on refresh
+- Conversion history, quick-amount chips, clipboard
 
 ### v2.0.0 — Complete Redesign
-- Bottom navigation bar (Home / Convert / Markets / Settings)
-- Persistent top bar with live rate pills
-- Live-as-you-type converter with inverse rate display
-- Atomic prefs writes; correct fallback rate loading
+- Bottom navigation, top bar pills, live converter
 
 ### v1.0.0 — Initial Release
-- Single-activity forex tracker, 14 currencies vs TZS
-- Dark UI, currency converter, trend chart, bank spread table
+- Single-activity forex tracker, 14 currencies
 
 ---
 
 ## 🔒 Privacy
 
-- ✅ **No personal data collected**
-- ✅ **No account registration**
-- ✅ **No analytics or tracking SDKs**
-- ✅ **All data stored locally** (SharedPreferences)
-- ✅ **Secure HTTPS** for all API calls
-- ✅ **No ads · No subscriptions · Completely free**
+- ✅ No personal data collected
+- ✅ No account required
+- ✅ No analytics or tracking SDKs
+- ✅ All data stored locally (SharedPreferences)
+- ✅ HTTPS for all API calls
+- ✅ No ads · No subscriptions · Free
 
 ---
 
@@ -229,7 +270,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 **Developer:** Willykez  
 **Email:** willykez01@gmail.com  
-**Package:** `com.willykez.tanzsx`
+**Package:** `com.willykez.fxetcher`  
+**GitHub:** [@Willykez](https://github.com/Willykez)
 
 ---
 
