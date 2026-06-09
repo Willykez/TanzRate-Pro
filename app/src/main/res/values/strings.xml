@@ -1,8 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TanzRate Pro</string>
-    <string name="widget_description">TanzRate live exchange rates widget</string>
-    <string name="notification_ch_alerts">Price Alerts</string>
-    <string name="notification_ch_updates">Rate Updates</string>
-    <string name="notification_ch_widget">Widget Refresh</string>
+	<string name="app_name" translatable="false">Fxetcher</string>
 </resources>
