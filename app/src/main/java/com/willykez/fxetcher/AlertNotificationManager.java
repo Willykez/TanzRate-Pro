@@ -66,7 +66,7 @@ public class AlertNotificationManager {
 
         Bitmap icon = buildUpdateIcon();
 
-        Intent intent = new Intent(ctx, MainActivity.class);
+        Intent intent = new Intent(ctx, FXetcherApp.class);
         PendingIntent pi = PendingIntent.getActivity(
                 ctx, 0, intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
