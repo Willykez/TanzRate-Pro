@@ -1,40 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Launcher icon vector drawable.
-  Replace with the actual branded icon before release.
-  This provides a compilable placeholder in the absence of PNG assets.
--->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Dark navy background -->
-    <path
-        android:fillColor="#0D1230"
-        android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
+    <!-- Pillar 1: Growth (Green) -->
+    <path android:pathData="M 22,83 L 36,83 L 36,61 A 2,2 0 0,0 34,59 L 24,59 A 2,2 0 0,0 22,61 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="29" android:startY="59" android:endX="29" android:endY="83">
+                <item android:color="#4ADE80" android:offset="0.0"/>
+                <item android:color="#16A34A" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- Gold ring -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFD700"
-        android:strokeWidth="5"
-        android:pathData="M54,10 A44,44 0 1,1 53.99,10 Z" />
+    <!-- Pillar 2: Wealth (Gold) -->
+    <path android:pathData="M 44,83 L 58,83 L 58,45 A 2,2 0 0,0 56,43 L 46,43 A 2,2 0 0,0 44,45 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="51" android:startY="43" android:endX="51" android:endY="83">
+                <item android:color="#FACC15" android:offset="0.0"/>
+                <item android:color="#CA8A04" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
 
-    <!-- TZ letters -->
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M28,38 L52,38 L28,70 L52,70"
-        android:strokeWidth="5"
-        android:strokeColor="#FFD700"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"/>
-    <path
-        android:fillColor="#FFD700"
-        android:pathData="M60,38 L80,38 M70,38 L70,70"
-        android:strokeWidth="5"
-        android:strokeColor="#FFD700"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"/>
+    <!-- Pillar 3: Breakthrough Arrow (Sky Blue) -->
+    <path android:pathData="M 66,83 L 80,83 L 80,41 L 86,41 L 73,25 L 60,41 L 66,41 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="73" android:startY="25" android:endX="73" android:endY="83">
+                <item android:color="#38BDF8" android:offset="0.0"/>
+                <item android:color="#0284C7" android:offset="1.0"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+
 </vector>
