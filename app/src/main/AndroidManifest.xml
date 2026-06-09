@@ -1,70 +1,43 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ─── Permissions ──────────────────────────────────────────── -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <application
-        android:name=".TanzRateApp"
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:label="@string/app_name"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.TanzRate"
-        android:usesCleartextTraffic="false"
-        tools:targetApi="31">
-
-        <!-- ─── Main Activity ──────────────────────────────────── -->
-        <activity
-            android:name=".TanzaniaForexApp"
-            android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:windowSoftInputMode="adjustResize"
-            android:screenOrientation="portrait"
-            android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-
-        <!-- ─── Home-Screen Widget ─────────────────────────────── -->
-        <receiver
-            android:name=".RateWidget"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/rate_widget_info" />
-        </receiver>
-
-        <!-- ─── Alert Dismiss Broadcast (from notification action) -->
-        <receiver
-            android:name=".DismissAlertReceiver"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.willykez.tanzs.DISMISS_ALERT" />
-            </intent-filter>
-        </receiver>
-
-        <!-- ─── Boot receiver – reschedules widget refresh ─────── -->
-        <receiver
-            android:name=".BootReceiver"
-            android:exported="true">
-            <intent-filter android:priority="500">
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-            </intent-filter>
-        </receiver>
-
-    </application>
-
-</manifest>
+<manifest
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	package="com.willykez.fxetcher">
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+	<application
+		android:allowBackup="true"
+		android:icon="@drawable/ic_launcher"
+		android:label="@string/app_name"
+		android:name=".willykez"
+		android:requestLegacyExternalStorage="true"
+		android:theme="@style/AppTheme">
+		<activity
+			android:name=".FXetcherApp"
+			android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout"
+			android:hardwareAccelerated="true"
+			android:supportsPictureInPicture="true"
+			android:screenOrientation="portrait"
+			android:exported="true">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+		</activity>
+		<activity
+			android:name=".DebugActivity"
+			android:screenOrientation="portrait"
+			android:theme="@style/AppTheme.DebugActivity" />
+		<provider
+			android:name="androidx.startup.InitializationProvider"
+			android:authorities="com.willykez.fxetcher.androidx-startup"
+			android:exported="false">
+			<meta-data
+				android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+				android:value="androidx.startup" />
+			<meta-data
+				android:name="androidx.emoji2.text.EmojiCompatInitializer"
+				android:value="androidx.startup" />
+		</provider>
+	</application>
+</manifest>
