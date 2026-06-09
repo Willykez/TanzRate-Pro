@@ -1,53 +1,31 @@
 plugins {
-    id 'com.android.application'
+	id 'com.android.application'
 }
 
 android {
-    namespace 'com.willykez.tanzs'
-    compileSdk 35
-
-    defaultConfig {
-        applicationId "com.willykez.tanzs"
-        minSdk 21
-        targetSdk 35
-        versionCode 4
-        versionName "2.3.0"
-        multiDexEnabled true
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        debug {
-            applicationIdSuffix ".debug"
-            debuggable true
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
-
-    packagingOptions {
-        resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-        }
-    }
+	compileSdk 34
+	
+	defaultConfig {
+		applicationId "com.willykez.fxetcher"
+		namespace "com.willykez.fxetcher"
+		minSdkVersion 21
+		targetSdkVersion 36
+		versionCode 1
+		versionName "1.0"
+	}
+	
+	buildTypes {
+		release {
+			minifyEnabled false
+			proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+		}
+	}
 }
 
 dependencies {
-    // AndroidX Core
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.core:core:1.13.1'
-    implementation 'androidx.multidex:multidex:2.0.1'
-
-    // Network – HTML scraping for BoT rates
-    implementation 'org.jsoup:jsoup:1.18.1'
-
-    // Material Design
-    implementation 'com.google.android.material:material:1.12.0'
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation 'androidx.appcompat:appcompat:1.7.1'
+	implementation 'com.google.android.material:material:1.12.0'
+	implementation 'com.facebook.shimmer:shimmer:0.5.0'
+	implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
 }
