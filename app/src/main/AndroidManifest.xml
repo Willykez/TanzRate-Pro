@@ -24,20 +24,5 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
-		<activity
-			android:name=".DebugActivity"
-			android:screenOrientation="portrait"
-			android:theme="@style/AppTheme.DebugActivity" />
-		<provider
-			android:name="androidx.startup.InitializationProvider"
-			android:authorities="com.willykez.fxetcher.androidx-startup"
-			android:exported="false">
-			<meta-data
-				android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-				android:value="androidx.startup" />
-			<meta-data
-				android:name="androidx.emoji2.text.EmojiCompatInitializer"
-				android:value="androidx.startup" />
-		</provider>
 	</application>
 </manifest>
