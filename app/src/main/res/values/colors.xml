@@ -1,7 +1,3 @@
 <resources>
-	<color name="colorPrimary">#827717</color>
-	<color name="colorPrimaryDark">#827717</color>
-	<color name="colorAccent">#827717</color>
-	<color name="colorControlHighlight">#D5E3FF</color>
-	<color name="colorControlNormal">#5177B1</color>
+    <color name="splash_bg">#0A0E1F</color>
 </resources>

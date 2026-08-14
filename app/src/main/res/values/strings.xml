@@ -1,4 +1,3 @@
 <resources>
-	<string name="app_name" translatable="false">Fxetcher</string>
-	<string name="widget_description">Fexcher</string>
+    <string name="app_name" translatable="false">FXetcher</string>
 </resources>
