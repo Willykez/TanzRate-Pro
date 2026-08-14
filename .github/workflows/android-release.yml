@@ -75,6 +75,18 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x gradlew
 
+      - name: Verify signing secrets are configured
+        run: |
+          missing=""
+          [ -z "${{ secrets.KEYSTORE_BASE64 }}" ] && missing="$missing KEYSTORE_BASE64"
+          [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] && missing="$missing KEYSTORE_PASSWORD"
+          [ -z "${{ secrets.KEY_ALIAS }}" ] && missing="$missing KEY_ALIAS"
+          [ -z "${{ secrets.KEY_PASSWORD }}" ] && missing="$missing KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secrets:$missing — add them under Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+
       - name: Decode signing keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.keystore
 
@@ -98,6 +110,13 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
+
+      - name: Upload R8 mapping (for de-obfuscating future crash reports)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fxetcher-mapping-${{ github.ref_name }}
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: warn
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

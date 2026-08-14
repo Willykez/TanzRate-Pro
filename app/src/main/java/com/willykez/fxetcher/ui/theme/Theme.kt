@@ -44,17 +44,22 @@ private val FXLightColors = lightColorScheme(
 private fun Color4(value: Long) = androidx.compose.ui.graphics.Color(value)
 
 @Composable
+fun useDarkTheme(themeMode: ThemeMode): Boolean {
+    val systemDark = isSystemInDarkTheme()
+    return when (themeMode) {
+        ThemeMode.SYSTEM -> systemDark
+        ThemeMode.DARK -> true
+        ThemeMode.LIGHT -> false
+    }
+}
+
+@Composable
 fun FXetcherTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val systemDark = isSystemInDarkTheme()
-    val useDark = when (themeMode) {
-        ThemeMode.SYSTEM -> systemDark
-        ThemeMode.DARK -> true
-        ThemeMode.LIGHT -> false
-    }
+    val useDark = useDarkTheme(themeMode)
     val context = LocalContext.current
     val supportsDynamic = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 

@@ -92,13 +92,16 @@ fun AppScaffold(vm: FxViewModel) {
                         }
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors()
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                )
             )
         },
         bottomBar = {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route
-            NavigationBar {
+            NavigationBar(containerColor = MaterialTheme.colorScheme.background) {
                 destinations.forEach { dest ->
                     NavigationBarItem(
                         selected = currentRoute == dest.route,

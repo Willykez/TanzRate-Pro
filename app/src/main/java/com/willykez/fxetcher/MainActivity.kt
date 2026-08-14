@@ -5,17 +5,22 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import com.willykez.fxetcher.ui.FxViewModel
 import com.willykez.fxetcher.ui.nav.AppScaffold
 import com.willykez.fxetcher.ui.theme.FXetcherTheme
+import com.willykez.fxetcher.ui.theme.useDarkTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -27,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -34,6 +40,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val settings by vm.settings.collectAsState()
+            val darkTheme = useDarkTheme(settings.themeMode)
+
+            val view = LocalView.current
+            SideEffect {
+                val controller = WindowCompat.getInsetsController(window, view)
+                controller.isAppearanceLightStatusBars = !darkTheme
+                controller.isAppearanceLightNavigationBars = !darkTheme
+            }
+
             FXetcherTheme(themeMode = settings.themeMode, dynamicColor = settings.dynamicColor) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
