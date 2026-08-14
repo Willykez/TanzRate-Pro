@@ -1,5 +1,6 @@
 package com.willykez.fxetcher.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -106,6 +107,7 @@ fun Badge(text: String, color: Color) {
  * A single currency row used across Home / Markets — flag, name, code, formatted
  * value, an optional mini sparkline trend, and a star toggle for the watchlist.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RateRow(
     flag: String,
