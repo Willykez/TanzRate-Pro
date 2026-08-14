@@ -91,7 +91,7 @@ class UserPreferencesRepository(private val context: Context) {
     }
     suspend fun setHomeSort(sort: HomeSort) = context.dataStore.edit { it[Keys.HOME_SORT] = sort.name }
 
-    suspend fun saveBotRates(rates: List<BotRate>) = context.dataStore.edit { it[Keys.BOT_RATES] = rates.toJson() }
+    suspend fun saveBotRates(rates: List<BotRate>) = context.dataStore.edit { it[Keys.BOT_RATES] = rates.toBotJson() }
 
     suspend fun addConversion(entry: String) = context.dataStore.edit { prefs ->
         val list = (parseStringList(prefs[Keys.CONV_HISTORY] ?: "[]").toMutableList())
@@ -117,12 +117,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun addAlert(alert: PriceAlert) = context.dataStore.edit { prefs ->
         val list = parseAlerts(prefs[Keys.ALERTS] ?: "[]").toMutableList()
         list.add(alert)
-        prefs[Keys.ALERTS] = list.toJson()
+        prefs[Keys.ALERTS] = list.toAlertJson()
     }
     suspend fun deleteAlert(index: Int) = context.dataStore.edit { prefs ->
         val list = parseAlerts(prefs[Keys.ALERTS] ?: "[]").toMutableList()
         if (index in list.indices) list.removeAt(index)
-        prefs[Keys.ALERTS] = list.toJson()
+        prefs[Keys.ALERTS] = list.toAlertJson()
     }
     suspend fun clearAlerts() = context.dataStore.edit { it[Keys.ALERTS] = "[]" }
 

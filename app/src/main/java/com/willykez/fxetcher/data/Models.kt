@@ -26,7 +26,7 @@ data class RatePoint(val value: Double, val timestamp: Long)
 
 // ── Lightweight JSON (de)serialization helpers, kept dependency-free ─────────
 
-fun List<BotRate>.toJson(): String {
+fun List<BotRate>.toBotJson(): String {
     val arr = JSONArray()
     forEach {
         arr.put(JSONObject().apply {
@@ -44,7 +44,7 @@ fun parseBotRates(raw: String): List<BotRate> = runCatching {
     }
 }.getOrDefault(emptyList())
 
-fun List<PriceAlert>.toJson(): String {
+fun List<PriceAlert>.toAlertJson(): String {
     val arr = JSONArray()
     forEach {
         arr.put(JSONObject().apply {
