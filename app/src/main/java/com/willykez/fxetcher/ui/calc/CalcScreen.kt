@@ -53,6 +53,7 @@ import com.willykez.fxetcher.ui.FxViewModel
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
 import com.willykez.fxetcher.ui.components.accentFor
+import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
 import com.willykez.fxetcher.ui.theme.Green
@@ -65,6 +66,7 @@ import java.text.DecimalFormat
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalcScreen(vm: FxViewModel) {
+    val strings = LocalStrings.current
     val rates by vm.rates.collectAsState()
     val history by vm.calcHistory.collectAsState()
     val context = LocalContext.current
@@ -82,10 +84,10 @@ fun CalcScreen(vm: FxViewModel) {
         item {
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                 SegmentedButton(selected = mode == 0, onClick = { mode = 0 }, shape = SegmentedButtonDefaults.itemShape(0, 2)) {
-                    Text("🧮 Keypad")
+                    Text("🧮 ${strings.keypad}")
                 }
                 SegmentedButton(selected = mode == 1, onClick = { mode = 1 }, shape = SegmentedButtonDefaults.itemShape(1, 2)) {
-                    Text("🍰 Split")
+                    Text("🍰 ${strings.split}")
                 }
             }
         }
@@ -295,8 +297,9 @@ private fun KeypadButton(label: String, modifier: Modifier = Modifier, highlight
 
 @Composable
 private fun RateReferenceCard(rates: Map<String, Double>, fmt: (Double) -> String) {
+    val strings = LocalStrings.current
     SectionCard {
-        SectionHeader("📋", "Quick Rate Reference", "Common conversions at a glance", Teal)
+        SectionHeader("📋", strings.rateRefTitle, strings.rateRefSubtitle, Teal)
         Spacer(Modifier.height(10.dp))
         HorizontalDivider()
         Spacer(Modifier.height(8.dp))
@@ -312,19 +315,19 @@ private fun RateReferenceCard(rates: Map<String, Double>, fmt: (Double) -> Strin
 
 @Composable
 private fun CalcHistoryCard(history: List<String>, onClear: () -> Unit) {
+    val strings = LocalStrings.current
     SectionCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("🕐 Calculator History", style = MaterialTheme.typography.titleMedium, color = Orange)
-                Text("Last 20 calculations", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("🕐 ${strings.calcHistoryTitle}", style = MaterialTheme.typography.titleMedium, color = Orange)
             }
-            TextButton(onClick = onClear) { Text("Clear") }
+            TextButton(onClick = onClear) { Text(strings.clear) }
         }
         Spacer(Modifier.height(10.dp))
         HorizontalDivider()
         if (history.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
-                Text("No calculations yet.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("—", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             Column {
@@ -340,11 +343,12 @@ private fun CalcHistoryCard(history: List<String>, onClear: () -> Unit) {
 // ── New feature: split a TZS amount evenly across several currencies ────────
 @Composable
 private fun SplitCalculator(rates: Map<String, Double>, fmt: (Double) -> String) {
+    val strings = LocalStrings.current
     var amountText by remember { mutableStateOf("100000") }
     var selected by remember { mutableStateOf(setOf("USD", "EUR", "KES")) }
 
     SectionCard {
-        SectionHeader("🍰", "Split Calculator", "Divide a TZS amount evenly across currencies", Purple)
+        SectionHeader("🍰", strings.splitTitle, strings.splitSubtitle, Purple)
         Spacer(Modifier.height(14.dp))
         androidx.compose.material3.OutlinedTextField(
             value = amountText,
@@ -354,7 +358,7 @@ private fun SplitCalculator(rates: Map<String, Double>, fmt: (Double) -> String)
             singleLine = true
         )
         Spacer(Modifier.height(14.dp))
-        Text("Split between", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(strings.splitBetween, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),

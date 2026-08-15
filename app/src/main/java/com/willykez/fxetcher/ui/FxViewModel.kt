@@ -12,6 +12,7 @@ import com.willykez.fxetcher.data.RatesRepository
 import com.willykez.fxetcher.data.ThemeMode
 import com.willykez.fxetcher.data.UserPreferencesRepository
 import com.willykez.fxetcher.notifications.NotificationHelper
+import com.willykez.fxetcher.ui.strings.AppLanguage
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -38,6 +40,11 @@ data class UiSettings(
 )
 
 class FxViewModel(app: Application) : AndroidViewModel(app) {
+
+    companion object {
+        /** How many rate snapshots to keep per currency for sparklines & analytics. */
+        const val MAX_HISTORY_POINTS = 200
+    }
 
     private val repo = RatesRepository()
     private val prefs = UserPreferencesRepository(app)
@@ -78,6 +85,12 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     val calcHistory: StateFlow<List<String>> = prefs.calcHistoryFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val pinnedFrom: StateFlow<String> = prefs.pinnedFromFlow.stateIn(viewModelScope, SharingStarted.Eagerly, "USD")
     val pinnedTo: StateFlow<String> = prefs.pinnedToFlow.stateIn(viewModelScope, SharingStarted.Eagerly, "TZS")
+    val language: StateFlow<AppLanguage> = prefs.languageFlow
+        .map { AppLanguage.fromCode(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, AppLanguage.ENGLISH)
+    val onboardingDone: StateFlow<Boolean?> = prefs.onboardingDoneFlow
+        .map { done -> done as Boolean? }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val settings: StateFlow<UiSettings> = combine<Any?, UiSettings>(
         prefs.autoRefreshFlow, prefs.refreshIntervalFlow, prefs.notifyUpdatesFlow,
@@ -139,7 +152,7 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
                     result.rates.forEach { (code, value) ->
                         val pts = (newHistory[code] ?: emptyList()).toMutableList()
                         pts.add(RatePoint(value, now))
-                        if (pts.size > 24) pts.removeAt(0)
+                        if (pts.size > MAX_HISTORY_POINTS) pts.removeAt(0)
                         newHistory[code] = pts
                     }
                     _prevRates.value = _rates.value
@@ -149,6 +162,7 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
                     prefs.saveRates(result.rates, _prevRates.value)
                     prefs.saveRateHistory(newHistory)
                     checkAlerts()
+                    runCatching { com.willykez.fxetcher.widget.RatesWidget().updateAll(getApplication()) }
                     if (settings.value.notifyUpdates) {
                         NotificationHelper.postRateUpdate(
                             getApplication(), result.rates["USD"], result.rates["EUR"], result.rates["GBP"]
@@ -266,6 +280,9 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
         prefs.setPinnedPair(from, to)
         _snackbar.trySend("📌 Pinned: $from → $to")
     }
+    fun setLanguage(lang: AppLanguage) = viewModelScope.launch { prefs.setLanguage(lang.code) }
+    fun completeOnboarding() = viewModelScope.launch { prefs.setOnboardingDone(true) }
+    fun replayOnboarding() = viewModelScope.launch { prefs.setOnboardingDone(false) }
 
     fun resetAllData() = viewModelScope.launch {
         prefs.resetAll()

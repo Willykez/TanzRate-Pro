@@ -44,6 +44,8 @@ import com.willykez.fxetcher.ui.FxViewModel
 import com.willykez.fxetcher.ui.components.InfoRow
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
+import com.willykez.fxetcher.ui.strings.AppLanguage
+import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
 import com.willykez.fxetcher.ui.theme.Orange
@@ -54,7 +56,9 @@ import com.willykez.fxetcher.ui.theme.Teal
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(vm: FxViewModel) {
+    val strings = LocalStrings.current
     val settings by vm.settings.collectAsState()
+    val language by vm.language.collectAsState()
     val context = LocalContext.current
     var confirmDialog by remember { mutableStateOf<ConfirmAction?>(null) }
 
@@ -65,27 +69,58 @@ fun SettingsScreen(vm: FxViewModel) {
     ) {
         item {
             SectionCard {
-                SectionHeader("🔄", "Auto-Refresh", "Keep rates up to date automatically", Blue)
+                SectionHeader("🔄", strings.autoRefreshTitle, strings.autoRefreshSubtitle, Blue)
                 Spacer(Modifier.height(14.dp))
-                ToggleRow("Auto-Refresh Rates", "Fetch latest rates in the background", settings.autoRefresh) {
+                ToggleRow(strings.autoRefreshTitle, strings.autoRefreshSubtitle, settings.autoRefresh) {
                     vm.setAutoRefresh(it)
                 }
                 Spacer(Modifier.height(10.dp)); HorizontalDivider(); Spacer(Modifier.height(12.dp))
-                Text("Refresh Interval", style = MaterialTheme.typography.titleSmall)
-                Text("How often to auto-refresh rates", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(strings.refreshIntervalTitle, style = MaterialTheme.typography.titleSmall)
                 Spacer(Modifier.height(10.dp))
                 val intervals = listOf(30_000 to "30s", 60_000 to "1m", 300_000 to "5m", 600_000 to "10m", 900_000 to "15m", 1_800_000 to "30m")
                 IntervalGrid(intervals, settings.refreshIntervalMs) { vm.setRefreshInterval(it) }
                 Spacer(Modifier.height(12.dp))
                 OutlinedButton(onClick = { vm.refreshAll() }, modifier = Modifier.fillMaxWidth()) {
-                    Text("🔄 Refresh Now")
+                    Text("🔄 ${strings.refreshNow}")
                 }
             }
         }
 
         item {
             SectionCard {
-                SectionHeader("🎨", "Appearance", "Choose your preferred theme", Purple)
+                SectionHeader("🌐", strings.languageTitle, strings.languageSubtitle, Teal)
+                Spacer(Modifier.height(14.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    AppLanguage.entries.forEach { lang ->
+                        val selected = language == lang
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (selected) Teal.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant)
+                                .clickable { vm.setLanguage(lang) }
+                                .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(lang.flag, style = MaterialTheme.typography.titleLarge)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    lang.displayName,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (selected) Teal else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            SectionCard {
+                SectionHeader("🎨", strings.appearanceTitle, strings.appearanceSubtitle, Purple)
                 Spacer(Modifier.height(14.dp))
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
                     ThemeMode.entries.forEachIndexed { i, mode ->
@@ -105,7 +140,7 @@ fun SettingsScreen(vm: FxViewModel) {
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                ToggleRow("Dynamic Color (Material You)", "Use wallpaper-based colors on Android 12+", settings.dynamicColor) {
+                ToggleRow(strings.dynamicColorTitle, strings.dynamicColorSubtitle, settings.dynamicColor) {
                     vm.setDynamicColor(it)
                 }
             }
@@ -113,9 +148,9 @@ fun SettingsScreen(vm: FxViewModel) {
 
         item {
             SectionCard {
-                SectionHeader("📐", "Display Options", "Customize how rates are shown", Teal)
+                SectionHeader("📐", strings.displayTitle, strings.displaySubtitle, Teal)
                 Spacer(Modifier.height(14.dp))
-                ToggleRow("Compact Mode", "Show more rates with less spacing", settings.compactMode) {
+                ToggleRow(strings.compactTitle, strings.compactSubtitle, settings.compactMode) {
                     vm.setCompactMode(it)
                 }
             }
@@ -123,9 +158,9 @@ fun SettingsScreen(vm: FxViewModel) {
 
         item {
             SectionCard {
-                SectionHeader("🔔", "Notifications", "Rate alerts and refresh notices", Orange)
+                SectionHeader("🔔", strings.notificationsTitle, strings.notificationsSubtitle, Orange)
                 Spacer(Modifier.height(14.dp))
-                ToggleRow("Rate Update Notifications", "Show a notification on each refresh", settings.notifyUpdates) {
+                ToggleRow(strings.notifyUpdatesTitle, strings.notifyUpdatesSubtitle, settings.notifyUpdates) {
                     vm.setNotifyUpdates(it)
                 }
             }
@@ -133,27 +168,31 @@ fun SettingsScreen(vm: FxViewModel) {
 
         item {
             SectionCard {
-                SectionHeader("💾", "Data Management", "Clear stored data", Purple)
+                SectionHeader("💾", strings.dataManagementTitle, "", Purple)
                 Spacer(Modifier.height(14.dp))
                 OutlinedButton(onClick = {
                     val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, vm.shareRatesText()) }
-                    context.startActivity(Intent.createChooser(i, "Share Rates"))
-                }, modifier = Modifier.fillMaxWidth()) { Text("📤 Export Rates as Text") }
+                    context.startActivity(Intent.createChooser(i, strings.exportRates))
+                }, modifier = Modifier.fillMaxWidth()) { Text("📤 ${strings.exportRates}") }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = { vm.replayOnboarding() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("👋 ${strings.replayOnboarding}")
+                }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = { confirmDialog = ConfirmAction.ClearHistory }, modifier = Modifier.fillMaxWidth()) {
-                    Text("🗑 Clear Conversion History", color = Red)
+                    Text("🗑 ${strings.clearHistory}", color = Red)
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = { confirmDialog = ConfirmAction.ClearWatchlist }, modifier = Modifier.fillMaxWidth()) {
-                    Text("⭐ Clear Watchlist", color = Orange)
+                    Text("⭐ ${strings.clearWatchlist}", color = Orange)
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = { confirmDialog = ConfirmAction.ClearAlerts }, modifier = Modifier.fillMaxWidth()) {
-                    Text("🗑 Clear All Alerts", color = Red)
+                    Text("🗑 ${strings.clearAlerts}", color = Red)
                 }
                 Spacer(Modifier.height(8.dp))
                 OutlinedButton(onClick = { confirmDialog = ConfirmAction.ResetAll }, modifier = Modifier.fillMaxWidth()) {
-                    Text("🔁 Reset All App Data", color = Red)
+                    Text("🔁 ${strings.resetAll}", color = Red)
                 }
             }
         }
@@ -187,9 +226,10 @@ fun SettingsScreen(vm: FxViewModel) {
                     }
                 }
                 Spacer(Modifier.height(14.dp)); HorizontalDivider(); Spacer(Modifier.height(8.dp))
-                InfoRow("Version", "5.0.0")
+                InfoRow("Version", "6.0.0")
                 InfoRow("Package", "com.willykez.fxetcher")
                 InfoRow("Currencies", "25 currencies + 2 metals")
+                InfoRow("Languages", "English, Kiswahili")
                 InfoRow("Forex Data", "ExchangeRate-API v6")
                 InfoRow("Metals Data", "MetalPriceAPI")
                 InfoRow("BoT Data", "bot.go.tz (scraped)")
@@ -230,7 +270,7 @@ fun SettingsScreen(vm: FxViewModel) {
                     confirmDialog = null
                 }) { Text(action.confirmLabel, color = Red) }
             },
-            dismissButton = { TextButton(onClick = { confirmDialog = null }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { confirmDialog = null }) { Text(strings.cancel) } }
         )
     }
 }

@@ -37,6 +37,8 @@ class UserPreferencesRepository(private val context: Context) {
         val PINNED_TO = stringPreferencesKey("pinned_to")
         val BOT_RATES = stringPreferencesKey("bot_rates_cache")
         val HOME_SORT = stringPreferencesKey("home_sort_mode")
+        val LANGUAGE = stringPreferencesKey("app_language")
+        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 
     val ratesFlow: Flow<Map<String, Double>> =
@@ -67,6 +69,8 @@ class UserPreferencesRepository(private val context: Context) {
     val homeSortFlow: Flow<HomeSort> = context.dataStore.data.map {
         runCatching { HomeSort.valueOf(it[Keys.HOME_SORT] ?: "DEFAULT") }.getOrDefault(HomeSort.DEFAULT)
     }
+    val languageFlow: Flow<String> = context.dataStore.data.map { it[Keys.LANGUAGE] ?: "en" }
+    val onboardingDoneFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.ONBOARDING_DONE] ?: false }
 
     suspend fun saveRates(rates: Map<String, Double>, previous: Map<String, Double>) {
         context.dataStore.edit {
@@ -90,6 +94,8 @@ class UserPreferencesRepository(private val context: Context) {
         it[Keys.PINNED_FROM] = from; it[Keys.PINNED_TO] = to
     }
     suspend fun setHomeSort(sort: HomeSort) = context.dataStore.edit { it[Keys.HOME_SORT] = sort.name }
+    suspend fun setLanguage(code: String) = context.dataStore.edit { it[Keys.LANGUAGE] = code }
+    suspend fun setOnboardingDone(done: Boolean) = context.dataStore.edit { it[Keys.ONBOARDING_DONE] = done }
 
     suspend fun saveBotRates(rates: List<BotRate>) = context.dataStore.edit { it[Keys.BOT_RATES] = rates.toBotJson() }
 

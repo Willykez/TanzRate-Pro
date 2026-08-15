@@ -60,6 +60,7 @@ import com.willykez.fxetcher.ui.components.CurrencyPickerField
 import com.willykez.fxetcher.ui.components.FieldLabel
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
+import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
 import com.willykez.fxetcher.ui.theme.Green
@@ -69,6 +70,7 @@ import java.text.DecimalFormat
 
 @Composable
 fun ConvertScreen(vm: FxViewModel) {
+    val strings = LocalStrings.current
     val rates by vm.rates.collectAsState()
     val pinnedFrom by vm.pinnedFrom.collectAsState()
     val pinnedTo by vm.pinnedTo.collectAsState()
@@ -93,9 +95,9 @@ fun ConvertScreen(vm: FxViewModel) {
     ) {
         item {
             SectionCard {
-                SectionHeader("💱", "Currency Converter", "Live rates · tap swap to reverse", Gold)
+                SectionHeader("💱", strings.converterTitle, strings.converterSubtitle, Gold)
                 Spacer(Modifier.height(16.dp))
-                FieldLabel("Amount")
+                FieldLabel(strings.amount)
                 Spacer(Modifier.height(6.dp))
                 OutlinedTextField(
                     value = amountText,
@@ -104,26 +106,26 @@ fun ConvertScreen(vm: FxViewModel) {
                     singleLine = true
                 )
                 Spacer(Modifier.height(16.dp))
-                FieldLabel("From")
+                FieldLabel(strings.from)
                 Spacer(Modifier.height(6.dp))
-                CurrencyPickerField("From", from) { from = it }
+                CurrencyPickerField(strings.from, from) { from = it }
                 Spacer(Modifier.height(12.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { val t = from; from = to; to = t }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Filled.SwapVert, contentDescription = null, modifier = Modifier.width(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Swap")
+                        Text(strings.swap)
                     }
                     OutlinedButton(onClick = { vm.setPinnedPair(from, to) }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Filled.PushPin, contentDescription = null, modifier = Modifier.width(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Pin Pair")
+                        Text(strings.pinPair)
                     }
                 }
                 Spacer(Modifier.height(12.dp))
-                FieldLabel("To")
+                FieldLabel(strings.to)
                 Spacer(Modifier.height(6.dp))
-                CurrencyPickerField("To", to) { to = it }
+                CurrencyPickerField(strings.to, to) { to = it }
                 Spacer(Modifier.height(20.dp))
 
                 Column(
@@ -178,12 +180,12 @@ fun ConvertScreen(vm: FxViewModel) {
                         Icon(Icons.Filled.Share, contentDescription = "Share", modifier = Modifier.width(18.dp))
                     }
                     Button(onClick = { vm.saveConversion(amount, from, to, result) }, modifier = Modifier.weight(1.4f)) {
-                        Text("✓ Save")
+                        Text("✓ ${strings.save}")
                     }
                 }
                 Spacer(Modifier.height(10.dp))
                 TextButton(onClick = { showMulti = !showMulti }, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (showMulti) "🌐 Hide Multi-Currency Results" else "🌐 Show Multi-Currency Results")
+                    Text("🌐 ${strings.multiCurrencyTitle} ${if (showMulti) "▲" else "▼"}")
                 }
             }
         }
@@ -216,8 +218,9 @@ private fun MultiCurrencyCard(
     convert: (Double, String, String) -> Double
 ) {
     val context = LocalContext.current
+    val strings = LocalStrings.current
     SectionCard {
-        SectionHeader("🌐", "Multi-Currency Results", "Same amount in all major currencies", Teal)
+        SectionHeader("🌐", strings.multiCurrencyTitle, strings.multiCurrencySubtitle, Teal)
         Spacer(Modifier.height(10.dp))
         HorizontalDivider()
         Spacer(Modifier.height(8.dp))
@@ -254,7 +257,7 @@ private fun QuickAmountsCard(onPick: (String) -> Unit) {
     val amounts = listOf(1.0, 5.0, 10.0, 50.0, 100.0, 500.0, 1_000.0, 5_000.0, 10_000.0, 50_000.0, 100_000.0, 1_000_000.0)
     var selected by remember { mutableStateOf<Double?>(null) }
     SectionCard {
-        SectionHeader("⚡", "Quick Amounts", "Tap to fill the amount field", Blue)
+        SectionHeader("⚡", LocalStrings.current.quickAmountsTitle, LocalStrings.current.quickAmountsSubtitle, Blue)
         Spacer(Modifier.height(12.dp))
         LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(amounts) { amt ->
@@ -279,13 +282,14 @@ private fun chipLabel(v: Double): String = when {
 
 @Composable
 private fun HistoryCard(history: List<String>, onClear: () -> Unit, onDelete: (Int) -> Unit) {
+    val strings = LocalStrings.current
     SectionCard {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             Column {
-                Text("🕐 Recent Conversions", style = MaterialTheme.typography.titleMedium, color = Orange)
-                Text("Last 30 conversions saved", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("🕐 ${strings.historyTitle}", style = MaterialTheme.typography.titleMedium, color = Orange)
+                Text(strings.historySubtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            TextButton(onClick = onClear) { Text("Clear") }
+            TextButton(onClick = onClear) { Text(strings.clear) }
         }
         Spacer(Modifier.height(10.dp))
         HorizontalDivider()
@@ -293,7 +297,7 @@ private fun HistoryCard(history: List<String>, onClear: () -> Unit, onDelete: (I
         if (history.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(vertical = 24.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "No conversions yet. Tap Save to begin.",
+                    strings.noConversions,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

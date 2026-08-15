@@ -42,6 +42,7 @@ import com.willykez.fxetcher.ui.components.RateRow
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
 import com.willykez.fxetcher.ui.components.accentFor
+import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
 import com.willykez.fxetcher.ui.theme.Orange
@@ -128,14 +129,15 @@ private fun LiveRatesCard(
     onShare: () -> Unit
 ) {
     SectionCard {
+        val strings = LocalStrings.current
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f)) {
-                SectionHeader("📈", "Live Rates vs TZS", "Tap any row for a quick conversion", Blue)
+                SectionHeader("📈", strings.liveRatesTitle, strings.liveRatesSubtitle, Blue)
             }
             OutlinedButton(onClick = onShare) {
                 Icon(Icons.Filled.Share, contentDescription = "Share", modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Share")
+                Text(strings.share)
             }
         }
         Spacer(Modifier.height(14.dp))
@@ -176,7 +178,8 @@ private fun EastAfricaCard(
     onFavorite: (String) -> Unit
 ) {
     SectionCard {
-        SectionHeader("🌍", "East African Currencies", "Regional currencies vs Tanzanian Shilling", Orange)
+        val strings = LocalStrings.current
+        SectionHeader("🌍", strings.eastAfricaTitle, strings.eastAfricaSubtitle, Orange)
         Spacer(Modifier.height(14.dp))
         HorizontalDivider()
         Spacer(Modifier.height(10.dp))
@@ -207,7 +210,8 @@ private fun EastAfricaCard(
 @Composable
 private fun MetalsCard(rates: Map<String, Double>, fmt: (Double) -> String, onRowClick: (String) -> Unit) {
     SectionCard {
-        SectionHeader("⚖️", "Precious Metals", "Gold & Silver · priced per troy ounce", Gold)
+        val strings = LocalStrings.current
+        SectionHeader("⚖️", strings.metalsTitle, strings.metalsSubtitle, Gold)
         Spacer(Modifier.height(14.dp))
         HorizontalDivider()
         Spacer(Modifier.height(12.dp))
@@ -234,7 +238,7 @@ private fun MetalTile(
             Text(icon, style = MaterialTheme.typography.headlineMedium)
             Spacer(Modifier.height(4.dp))
             Text(label, style = MaterialTheme.typography.titleSmall, color = accent, fontWeight = FontWeight.Bold)
-            Text("per troy oz", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(LocalStrings.current.perTroyOz, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(8.dp))
             Text(
                 value?.let { "${fmt(it)}" } ?: "Loading…",

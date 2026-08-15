@@ -53,6 +53,7 @@ import com.willykez.fxetcher.ui.components.RateRow
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
 import com.willykez.fxetcher.ui.components.accentFor
+import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
 import com.willykez.fxetcher.ui.theme.Green
@@ -64,6 +65,7 @@ import com.willykez.fxetcher.ui.theme.Teal
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MarketsScreen(vm: FxViewModel) {
+    val strings = LocalStrings.current
     val rates by vm.rates.collectAsState()
     val prevRates by vm.prevRates.collectAsState()
     val history by vm.rateHistory.collectAsState()
@@ -88,7 +90,7 @@ fun MarketsScreen(vm: FxViewModel) {
         }
         item {
             RateSectionCard(
-                icon = "💵", title = "Major Currencies", subtitle = "Top global currencies vs TZS", accent = Blue,
+                icon = "💵", title = strings.majorTitle, subtitle = strings.majorSubtitle, accent = Blue,
                 codes = CurrencyMeta.LIVE_TOP, rates = rates, prevRates = prevRates, history = history,
                 watchlist = watchlist, fmt = vm.fmtTzs::format,
                 onRowClick = { quickConvertCode = it }, onFavorite = { vm.toggleWatchlist(it) }
@@ -96,7 +98,7 @@ fun MarketsScreen(vm: FxViewModel) {
         }
         item {
             RateSectionCard(
-                icon = "🌍", title = "East Africa & Beyond", subtitle = "Regional currencies vs TZS", accent = Orange,
+                icon = "🌍", title = strings.eastAfricaTitle, subtitle = strings.eastAfricaSubtitle, accent = Orange,
                 codes = CurrencyMeta.EAST_AFRICA, rates = rates, prevRates = prevRates, history = history,
                 watchlist = watchlist, fmt = vm.fmtTzs::format,
                 onRowClick = { quickConvertCode = it }, onFavorite = { vm.toggleWatchlist(it) }
@@ -104,7 +106,7 @@ fun MarketsScreen(vm: FxViewModel) {
         }
         item {
             SectionCard {
-                SectionHeader("⚖️", "Precious Metals", "Extended metals reference", Gold)
+                SectionHeader("⚖️", strings.metalsTitle, "Extended metals reference", Gold)
                 Spacer(Modifier.height(10.dp))
                 HorizontalDivider()
                 Spacer(Modifier.height(8.dp))
@@ -116,8 +118,8 @@ fun MarketsScreen(vm: FxViewModel) {
                     ) {
                         Text("${CurrencyMeta.of(code).flag} ${CurrencyMeta.of(code).name}", style = MaterialTheme.typography.bodyMedium)
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(r?.let { "${vm.fmtTzs.format(it)} TZS" } ?: "Loading…", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            Text("per troy oz", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(r?.let { "${vm.fmtTzs.format(it)} TZS" } ?: strings.loading, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                            Text(strings.perTroyOz, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -157,12 +159,13 @@ private fun WatchlistCard(
     onFavorite: (String) -> Unit
 ) {
     SectionCard {
-        SectionHeader("⭐", "My Watchlist", "Tap the star on any currency to pin it here", Gold)
+        val strings = LocalStrings.current
+        SectionHeader("⭐", strings.watchlistTitle, strings.watchlistSubtitle, Gold)
         Spacer(Modifier.height(10.dp))
         if (watchlist.isEmpty()) {
             Box(Modifier.fillMaxWidth().padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "Your watchlist is empty.\nTap the star on any currency to pin it here.",
+                    strings.watchlistEmpty,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -231,18 +234,19 @@ private fun AlertsCard(
     onDelete: (Int) -> Unit
 ) {
     SectionCard {
-        SectionHeader("🔔", "Price Alerts", "Notify when rates cross your targets", Blue)
+        val strings = LocalStrings.current
+        SectionHeader("🔔", strings.alertsTitle, strings.alertsSubtitle, Blue)
         Spacer(Modifier.height(12.dp))
         Button(onClick = onAdd, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.width(18.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Add New Alert")
+            Text(strings.addAlert)
         }
         Spacer(Modifier.height(12.dp))
         if (alerts.isEmpty()) {
             HorizontalDivider()
             Box(Modifier.fillMaxWidth().padding(vertical = 18.dp), contentAlignment = Alignment.Center) {
-                Text("No alerts yet. Tap Add New Alert.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(strings.noAlerts, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -265,15 +269,16 @@ private fun AlertsCard(
                         )
                         Spacer(Modifier.width(10.dp))
                         Column(Modifier.weight(1f)) {
+                            val strings = LocalStrings.current
                             Text(
-                                "${CurrencyMeta.of(alert.currency).flag}  ${alert.currency}  ${if (up) "▲ rises above" else "▼ falls below"}",
+                                "${CurrencyMeta.of(alert.currency).flag}  ${alert.currency}  ${if (up) "▲ ${strings.risesAbove.lowercase()}" else "▼ ${strings.fallsBelow.lowercase()}"}",
                                 style = MaterialTheme.typography.titleSmall
                             )
-                            Text("Target: ${fmt(alert.target)} TZS", style = MaterialTheme.typography.labelSmall, color = Gold)
+                            Text("${strings.target}: ${fmt(alert.target)} TZS", style = MaterialTheme.typography.labelSmall, color = Gold)
                             if (cur != null) {
                                 val diff = cur - alert.target
                                 Text(
-                                    "Now: ${fmt(cur)} TZS  (${if (diff >= 0) "+" else ""}${fmt(diff)})",
+                                    "${strings.current}: ${fmt(cur)} TZS  (${if (diff >= 0) "+" else ""}${fmt(diff)})",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = if (cur >= alert.target) Green else Red
                                 )
@@ -298,6 +303,7 @@ private fun AddAlertSheet(
     onCreate: (String, Double, Int) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
+    val strings = LocalStrings.current
     var code by remember { mutableStateOf("USD") }
     var condition by remember { mutableStateOf(0) }
     var targetText by remember { mutableStateOf("") }
@@ -307,9 +313,9 @@ private fun AddAlertSheet(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = Blue)
                 Spacer(Modifier.width(8.dp))
-                Text("New Price Alert", style = MaterialTheme.typography.titleLarge)
+                Text(strings.newAlertTitle, style = MaterialTheme.typography.titleLarge)
             }
-            Text("Notify me when a rate crosses my target", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(strings.newAlertSubtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             FieldLabel("Currency")
             Spacer(Modifier.height(6.dp))
@@ -321,11 +327,11 @@ private fun AddAlertSheet(
                 SegmentedButton(
                     selected = condition == 0, onClick = { condition = 0 },
                     shape = SegmentedButtonDefaults.itemShape(0, 2)
-                ) { Text("📈 Rises above") }
+                ) { Text("📈 ${strings.risesAbove}") }
                 SegmentedButton(
                     selected = condition == 1, onClick = { condition = 1 },
                     shape = SegmentedButtonDefaults.itemShape(1, 2)
-                ) { Text("📉 Falls below") }
+                ) { Text("📉 ${strings.fallsBelow}") }
             }
             Spacer(Modifier.height(12.dp))
             FieldLabel("Target Rate (TZS)")
@@ -340,7 +346,7 @@ private fun AddAlertSheet(
             )
             currentRate?.let {
                 Spacer(Modifier.height(4.dp))
-                Text("Current: ${fmt(it)} TZS", style = MaterialTheme.typography.labelSmall, color = Green)
+                Text("${strings.current}: ${fmt(it)} TZS", style = MaterialTheme.typography.labelSmall, color = Green)
             }
             Spacer(Modifier.height(20.dp))
             Button(
@@ -352,7 +358,7 @@ private fun AddAlertSheet(
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp)
-            ) { Text("🔔 Create Alert") }
+            ) { Text("🔔 ${strings.createAlert}") }
             Spacer(Modifier.height(24.dp))
         }
     }
