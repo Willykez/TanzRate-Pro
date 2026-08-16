@@ -162,7 +162,7 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
                     prefs.saveRates(result.rates, _prevRates.value)
                     prefs.saveRateHistory(newHistory)
                     checkAlerts()
-                    runCatching { com.willykez.fxetcher.widget.RatesWidget().updateAll(getApplication()) }
+                    runCatching { com.willykez.fxetcher.widget.refreshRatesWidget(getApplication()) }
                     if (settings.value.notifyUpdates) {
                         NotificationHelper.postRateUpdate(
                             getApplication(), result.rates["USD"], result.rates["EUR"], result.rates["GBP"]

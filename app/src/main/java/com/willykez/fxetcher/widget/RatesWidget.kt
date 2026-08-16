@@ -10,12 +10,12 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
-import androidx.glance.layout.defaultWeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -77,7 +77,7 @@ class RatesWidget : GlanceAppWidget() {
                         Text(
                             "${currency.flag} $code",
                             style = TextStyle(color = WidgetMuted, fontSize = 13.sp),
-                            modifier = GlanceModifier.defaultWeight()
+                            modifier = GlanceModifier.width(64.dp)
                         )
                         Text(
                             value?.let { "${fmt.format(it)} TZS" } ?: "—",
@@ -93,4 +93,13 @@ class RatesWidget : GlanceAppWidget() {
             }
         }
     }
+}
+
+/**
+ * [GlanceAppWidget.updateAll] isn't a member function — it's a top-level
+ * reified function keyed by widget type. Wrapping it here keeps callers
+ * (the ViewModel, the background worker) from needing to know that.
+ */
+suspend fun refreshRatesWidget(context: Context) {
+    updateAll<RatesWidget>(context)
 }

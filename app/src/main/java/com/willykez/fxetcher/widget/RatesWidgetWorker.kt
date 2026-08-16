@@ -33,7 +33,7 @@ class RatesWidgetWorker(context: Context, params: WorkerParameters) : CoroutineW
                 }
                 is RatesRepository.FetchResult.Failure -> { /* keep last cached rates */ }
             }
-            RatesWidget().updateAll(applicationContext)
+            refreshRatesWidget(applicationContext)
             Result.success()
         } catch (e: Exception) {
             Result.retry()
