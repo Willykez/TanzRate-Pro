@@ -9,8 +9,8 @@ import androidx.glance.GlanceModifier
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Column
@@ -96,10 +96,13 @@ class RatesWidget : GlanceAppWidget() {
 }
 
 /**
- * [GlanceAppWidget.updateAll] isn't a member function — it's a top-level
- * reified function keyed by widget type. Wrapping it here keeps callers
- * (the ViewModel, the background worker) from needing to know that.
+ * Re-renders every placed instance of the widget. Uses [GlanceAppWidgetManager]
+ * plus the per-instance [GlanceAppWidget.update] — the foundational, stable
+ * primitive that Glance's own convenience wrappers are built on top of.
  */
 suspend fun refreshRatesWidget(context: Context) {
-    updateAll<RatesWidget>(context)
+    val manager = GlanceAppWidgetManager(context)
+    val glanceIds = manager.getGlanceIds(RatesWidget::class.java)
+    val widget = RatesWidget()
+    glanceIds.forEach { id -> widget.update(context, id) }
 }
