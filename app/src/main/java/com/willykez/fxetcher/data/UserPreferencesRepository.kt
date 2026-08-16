@@ -39,6 +39,7 @@ class UserPreferencesRepository(private val context: Context) {
         val HOME_SORT = stringPreferencesKey("home_sort_mode")
         val LANGUAGE = stringPreferencesKey("app_language")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
     }
 
     val ratesFlow: Flow<Map<String, Double>> =
@@ -71,6 +72,7 @@ class UserPreferencesRepository(private val context: Context) {
     }
     val languageFlow: Flow<String> = context.dataStore.data.map { it[Keys.LANGUAGE] ?: "en" }
     val onboardingDoneFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.ONBOARDING_DONE] ?: false }
+    val highContrastFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.HIGH_CONTRAST] ?: false }
 
     suspend fun saveRates(rates: Map<String, Double>, previous: Map<String, Double>) {
         context.dataStore.edit {
@@ -96,6 +98,7 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setHomeSort(sort: HomeSort) = context.dataStore.edit { it[Keys.HOME_SORT] = sort.name }
     suspend fun setLanguage(code: String) = context.dataStore.edit { it[Keys.LANGUAGE] = code }
     suspend fun setOnboardingDone(done: Boolean) = context.dataStore.edit { it[Keys.ONBOARDING_DONE] = done }
+    suspend fun setHighContrast(enabled: Boolean) = context.dataStore.edit { it[Keys.HIGH_CONTRAST] = enabled }
 
     suspend fun saveBotRates(rates: List<BotRate>) = context.dataStore.edit { it[Keys.BOT_RATES] = rates.toBotJson() }
 
@@ -108,6 +111,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun deleteConversion(index: Int) = context.dataStore.edit { prefs ->
         val list = parseStringList(prefs[Keys.CONV_HISTORY] ?: "[]").toMutableList()
         if (index in list.indices) list.removeAt(index)
+        prefs[Keys.CONV_HISTORY] = list.toJsonArray()
+    }
+    suspend fun restoreConversion(index: Int, entry: String) = context.dataStore.edit { prefs ->
+        val list = parseStringList(prefs[Keys.CONV_HISTORY] ?: "[]").toMutableList()
+        val at = index.coerceIn(0, list.size)
+        list.add(at, entry)
         prefs[Keys.CONV_HISTORY] = list.toJsonArray()
     }
     suspend fun clearConversions() = context.dataStore.edit { it[Keys.CONV_HISTORY] = "[]" }
@@ -128,6 +137,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun deleteAlert(index: Int) = context.dataStore.edit { prefs ->
         val list = parseAlerts(prefs[Keys.ALERTS] ?: "[]").toMutableList()
         if (index in list.indices) list.removeAt(index)
+        prefs[Keys.ALERTS] = list.toAlertJson()
+    }
+    suspend fun restoreAlert(index: Int, alert: PriceAlert) = context.dataStore.edit { prefs ->
+        val list = parseAlerts(prefs[Keys.ALERTS] ?: "[]").toMutableList()
+        val at = index.coerceIn(0, list.size)
+        list.add(at, alert)
         prefs[Keys.ALERTS] = list.toAlertJson()
     }
     suspend fun clearAlerts() = context.dataStore.edit { it[Keys.ALERTS] = "[]" }

@@ -1,0 +1,8 @@
+<resources>
+    <string name="shortcut_convert_short">Badilisha</string>
+    <string name="shortcut_convert_long">Badilisha sarafu</string>
+    <string name="shortcut_markets_short">Masoko</string>
+    <string name="shortcut_markets_long">Angalia masoko na arifa</string>
+    <string name="shortcut_calc_short">Kikokotoo</string>
+    <string name="shortcut_calc_long">Fungua kikokotoo</string>
+</resources>

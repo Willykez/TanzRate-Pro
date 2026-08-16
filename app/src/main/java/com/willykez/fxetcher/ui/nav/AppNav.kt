@@ -1,11 +1,16 @@
 package com.willykez.fxetcher.ui.nav
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -19,8 +24,10 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CurrencyExchange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShowChart
+import androidx.compose.material.icons.filled.SignalWifiOff
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,18 +41,26 @@ import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.willykez.fxetcher.ui.components.GlobalSearchSheet
 import com.willykez.fxetcher.ui.components.PulsingDot
+import com.willykez.fxetcher.ui.components.QuickConvertSheet
+import com.willykez.fxetcher.ui.theme.Orange
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -82,11 +97,35 @@ fun AppScaffold(vm: FxViewModel) {
     val navController = rememberNavController()
     val snackbarHostState = remember { SnackbarHostState() }
     val fetching by vm.fetching.collectAsState()
+    val offline by vm.offline.collectAsState()
+    val rates by vm.rates.collectAsState()
+    val pendingDeepLink by vm.pendingDeepLink.collectAsState()
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
     val isWideLayout = screenWidthDp >= WIDE_LAYOUT_BREAKPOINT_DP
 
+    var searchOpen by remember { mutableStateOf(false) }
+    var quickConvertCode by remember { mutableStateOf<String?>(null) }
+
     LaunchedEffect(Unit) {
-        vm.snackbarMessages.collectLatest { msg -> snackbarHostState.showSnackbar(msg) }
+        vm.snackbarMessages.collectLatest { req ->
+            val result = snackbarHostState.showSnackbar(
+                message = req.message,
+                actionLabel = req.actionLabel,
+                withDismissAction = req.actionLabel == null
+            )
+            if (result == SnackbarResult.ActionPerformed) req.onAction?.invoke()
+        }
+    }
+
+    LaunchedEffect(pendingDeepLink) {
+        pendingDeepLink?.let { route ->
+            navController.navigate(route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+            vm.consumeDeepLink()
+        }
     }
 
     fun labelFor(dest: Dest) = when (dest) {
@@ -116,6 +155,9 @@ fun AppScaffold(vm: FxViewModel) {
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    IconButton(onClick = { searchOpen = true }) {
+                        Icon(Icons.Filled.Search, contentDescription = strings.searchHint)
+                    }
                     IconButton(onClick = { vm.refreshAll() }) {
                         Icon(Icons.Filled.Refresh, contentDescription = "Refresh")
                     }
@@ -128,22 +170,42 @@ fun AppScaffold(vm: FxViewModel) {
         )
     }
 
-    val navHost: @Composable (Modifier) -> Unit = { modifier ->
-        NavHost(
-            navController = navController,
-            startDestination = Dest.Home.route,
-            modifier = modifier,
-            enterTransition = { slideInHorizontally(tween(260)) { it / 6 } + fadeIn(tween(220)) },
-            exitTransition = { fadeOut(tween(150)) },
-            popEnterTransition = { fadeIn(tween(220)) },
-            popExitTransition = { slideOutHorizontally(tween(260)) { it / 6 } + fadeOut(tween(150)) }
-        ) {
-            composable(Dest.Home.route) { HomeScreen(vm) }
-            composable(Dest.Convert.route) { ConvertScreen(vm) }
-            composable(Dest.Markets.route) { MarketsScreen(vm) }
-            composable(Dest.Calc.route) { CalcScreen(vm) }
-            composable(Dest.Analytics.route) { AnalyticsScreen(vm) }
-            composable(Dest.Settings.route) { SettingsScreen(vm) }
+    val offlineBanner: @Composable () -> Unit = {
+        AnimatedVisibility(visible = offline, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Orange.copy(alpha = 0.16f))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .semantics(mergeDescendants = true) { contentDescription = strings.offlineBanner },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Filled.SignalWifiOff, contentDescription = null, tint = Orange, modifier = Modifier.width(16.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(strings.offlineBanner, style = MaterialTheme.typography.labelMedium, color = Orange)
+            }
+        }
+    }
+
+    val content: @Composable (Modifier) -> Unit = { modifier ->
+        Column(modifier) {
+            offlineBanner()
+            NavHost(
+                navController = navController,
+                startDestination = Dest.Home.route,
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                enterTransition = { slideInHorizontally(tween(260)) { it / 6 } + fadeIn(tween(220)) },
+                exitTransition = { fadeOut(tween(150)) },
+                popEnterTransition = { fadeIn(tween(220)) },
+                popExitTransition = { slideOutHorizontally(tween(260)) { it / 6 } + fadeOut(tween(150)) }
+            ) {
+                composable(Dest.Home.route) { HomeScreen(vm) }
+                composable(Dest.Convert.route) { ConvertScreen(vm) }
+                composable(Dest.Markets.route) { MarketsScreen(vm) }
+                composable(Dest.Calc.route) { CalcScreen(vm) }
+                composable(Dest.Analytics.route) { AnalyticsScreen(vm) }
+                composable(Dest.Settings.route) { SettingsScreen(vm) }
+            }
         }
     }
 
@@ -171,7 +233,7 @@ fun AppScaffold(vm: FxViewModel) {
                     }
                 }
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-                    navHost(Modifier.widthIn(max = 900.dp).fillMaxSize())
+                    content(Modifier.widthIn(max = 900.dp).fillMaxSize())
                 }
             }
         }
@@ -194,8 +256,29 @@ fun AppScaffold(vm: FxViewModel) {
                 }
             }
         ) { padding ->
-            navHost(Modifier.padding(padding).fillMaxSize())
+            content(Modifier.padding(padding).fillMaxSize())
         }
+    }
+
+    if (searchOpen) {
+        GlobalSearchSheet(
+            rates = rates,
+            fmt = vm.fmtTzs::format,
+            hint = strings.searchHint,
+            noResultsText = strings.searchNoResults,
+            onDismiss = { searchOpen = false },
+            onSelect = { code -> searchOpen = false; quickConvertCode = code }
+        )
+    }
+
+    quickConvertCode?.let { code ->
+        QuickConvertSheet(
+            code = code,
+            tzsRate = rates[code],
+            fmt = vm.fmtTzs::format,
+            onDismiss = { quickConvertCode = null },
+            onSave = { amount, result -> vm.saveConversion(amount, code, "TZS", result) }
+        )
     }
 }
 

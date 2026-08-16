@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name" translatable="false">FXetcher</string>
+
+    <string name="shortcut_convert_short">Convert</string>
+    <string name="shortcut_convert_long">Convert currency</string>
+    <string name="shortcut_markets_short">Markets</string>
+    <string name="shortcut_markets_long">View markets &amp; alerts</string>
+    <string name="shortcut_calc_short">Calculator</string>
+    <string name="shortcut_calc_long">Open calculator</string>
 </resources>

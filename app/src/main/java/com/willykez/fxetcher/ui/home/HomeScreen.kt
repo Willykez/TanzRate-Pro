@@ -13,10 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,11 +35,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.willykez.fxetcher.data.CurrencyMeta
+import com.willykez.fxetcher.data.RatePoint
 import com.willykez.fxetcher.ui.FxViewModel
+import com.willykez.fxetcher.ui.components.AreaSparkline
 import com.willykez.fxetcher.ui.components.InfoRow
 import com.willykez.fxetcher.ui.components.QuickConvertSheet
 import com.willykez.fxetcher.ui.components.RateRow
@@ -45,8 +54,11 @@ import com.willykez.fxetcher.ui.components.accentFor
 import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
 import com.willykez.fxetcher.ui.theme.Gold
+import com.willykez.fxetcher.ui.theme.Green
 import com.willykez.fxetcher.ui.theme.Orange
 import com.willykez.fxetcher.ui.theme.Purple
+import com.willykez.fxetcher.ui.theme.Red
+import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +74,7 @@ fun HomeScreen(vm: FxViewModel) {
     val context = LocalContext.current
 
     var quickConvertCode by remember { mutableStateOf<String?>(null) }
+    var heroCode by remember { mutableStateOf("USD") }
 
     PullToRefreshBox(
         isRefreshing = fetching || botFetching,
@@ -73,6 +86,16 @@ fun HomeScreen(vm: FxViewModel) {
             contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            item {
+                HeroRateCard(
+                    heroCode = heroCode,
+                    onHeroCodeChange = { heroCode = it },
+                    rates = rates,
+                    history = rateHistory,
+                    fmt = vm.fmtTzs::format,
+                    onClick = { quickConvertCode = heroCode }
+                )
+            }
             item {
                 LiveRatesCard(
                     rates = rates, prevRates = prevRates, history = rateHistory,
@@ -114,6 +137,73 @@ fun HomeScreen(vm: FxViewModel) {
             onDismiss = { quickConvertCode = null },
             onSave = { amount, result -> vm.saveConversion(amount, code, "TZS", result) }
         )
+    }
+}
+
+@Composable
+private fun HeroRateCard(
+    heroCode: String,
+    onHeroCodeChange: (String) -> Unit,
+    rates: Map<String, Double>,
+    history: Map<String, List<RatePoint>>,
+    fmt: (Double) -> String,
+    onClick: () -> Unit
+) {
+    val strings = LocalStrings.current
+    val quickPicks = listOf("USD", "EUR", "GBP", "XAU")
+    val currency = CurrencyMeta.of(heroCode)
+    val value = rates[heroCode]
+    val points = history[heroCode]?.map { it.value } ?: emptyList()
+    val changePct = if (points.size >= 2 && points.first() != 0.0) {
+        (points.last() - points.first()) / points.first() * 100.0
+    } else null
+    val up = (changePct ?: 0.0) >= 0
+    val trendColor = if (up) Green else Red
+
+    SectionCard {
+        Row(
+            Modifier.fillMaxWidth().clickable(onClick = onClick),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    "${currency.flag} 1 $heroCode = ",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    value?.let { "${fmt(it)} TZS" } ?: strings.loading,
+                    style = MaterialTheme.typography.displayLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics(mergeDescendants = true) {
+                        contentDescription = "$heroCode ${value?.let { "${fmt(it)} Tanzanian Shillings" } ?: strings.loading}"
+                    }
+                )
+                if (changePct != null) {
+                    Text(
+                        "${if (up) "▲" else "▼"} ${DecimalFormat("#,##0.00").format(kotlin.math.abs(changePct))}% ${strings.heroChangeToday}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = trendColor
+                    )
+                }
+            }
+        }
+        if (points.size >= 2) {
+            Spacer(Modifier.height(12.dp))
+            AreaSparkline(points = points, color = trendColor, modifier = Modifier.fillMaxWidth().height(60.dp))
+        }
+        Spacer(Modifier.height(14.dp))
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(quickPicks) { code ->
+                val c = CurrencyMeta.of(code)
+                FilterChip(
+                    selected = heroCode == code,
+                    onClick = { onHeroCodeChange(code) },
+                    label = { Text("${c.flag} $code") }
+                )
+            }
+        }
     }
 }
 

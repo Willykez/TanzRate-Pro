@@ -1,6 +1,8 @@
 package com.willykez.fxetcher.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -40,7 +42,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.staticCompositionLocalOf
 import com.willykez.fxetcher.ui.theme.AccentPalette
+
+/** Accessibility: when true, secondary/muted text renders at full contrast instead of the dimmed tone. */
+val LocalHighContrast = staticCompositionLocalOf { false }
+
+@Composable
+fun mutedTextColor(): Color =
+    if (LocalHighContrast.current) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
 
 fun accentFor(index: Int): Color = AccentPalette[index % AccentPalette.size]
 
@@ -139,7 +149,11 @@ fun RateRow(
             .background(flashColor)
             .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .semantics(mergeDescendants = true) {
+                contentDescription = "$code, $name, $valueText" +
+                    (changePct?.let { if (it != 0.0) ", ${if (it >= 0) "up" else "down"} ${"%.2f".format(kotlin.math.abs(it))} percent" else "" } ?: "")
+            },
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -154,7 +168,7 @@ fun RateRow(
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
             Text(code, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface)
-            Text(name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(name, style = MaterialTheme.typography.bodySmall, color = mutedTextColor())
         }
         if (sparkline.size >= 2) {
             Sparkline(
@@ -196,7 +210,7 @@ fun InfoRow(label: String, value: String) {
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = mutedTextColor())
         Text(value, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }

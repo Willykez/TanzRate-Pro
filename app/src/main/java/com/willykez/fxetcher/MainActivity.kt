@@ -1,6 +1,7 @@
 package com.willykez.fxetcher
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -15,6 +16,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -23,6 +25,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
 import com.willykez.fxetcher.ui.FxViewModel
+import com.willykez.fxetcher.ui.components.LocalHighContrast
 import com.willykez.fxetcher.ui.nav.AppScaffold
 import com.willykez.fxetcher.ui.onboarding.OnboardingScreen
 import com.willykez.fxetcher.ui.strings.LocalStrings
@@ -31,6 +34,10 @@ import com.willykez.fxetcher.ui.theme.FXetcherTheme
 import com.willykez.fxetcher.ui.theme.useDarkTheme
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_DEEP_LINK_ROUTE = "deep_link_route"
+    }
 
     private val vm: FxViewModel by viewModels()
 
@@ -51,6 +58,8 @@ class MainActivity : ComponentActivity() {
             requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
 
+        handleShortcutIntent(intent)
+
         setContent {
             val settings by vm.settings.collectAsState()
             val language by vm.language.collectAsState()
@@ -66,31 +75,45 @@ class MainActivity : ComponentActivity() {
 
             FXetcherTheme(themeMode = settings.themeMode, dynamicColor = settings.dynamicColor) {
                 ProvideStrings(language) {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background
-                    ) {
-                        if (onboardingDone == null) {
-                            // Splash is still covering the screen at this point.
-                        } else {
-                            AnimatedContent(
-                                targetState = onboardingDone == true,
-                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                label = "onboardingGate"
-                            ) { showApp ->
-                                if (showApp) {
-                                    AppScaffold(vm)
-                                } else {
-                                    OnboardingScreen(
-                                        strings = LocalStrings.current,
-                                        onDone = { vm.completeOnboarding() }
-                                    )
+                    CompositionLocalProvider(LocalHighContrast provides settings.highContrast) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            if (onboardingDone == null) {
+                                // Splash is still covering the screen at this point.
+                            } else {
+                                AnimatedContent(
+                                    targetState = onboardingDone == true,
+                                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                                    label = "onboardingGate"
+                                ) { showApp ->
+                                    if (showApp) {
+                                        AppScaffold(vm)
+                                    } else {
+                                        OnboardingScreen(
+                                            strings = LocalStrings.current,
+                                            onDone = { vm.completeOnboarding() }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleShortcutIntent(intent)
+    }
+
+    private fun handleShortcutIntent(intent: Intent?) {
+        intent?.getStringExtra(EXTRA_DEEP_LINK_ROUTE)?.let { route ->
+            vm.setPendingDeepLink(route)
         }
     }
 }

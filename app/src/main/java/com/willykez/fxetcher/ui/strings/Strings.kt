@@ -82,7 +82,15 @@ data class Strings(
     val onboardSkip: String, val onboardNext: String, val onboardStart: String,
 
     // Widget
-    val widgetTitle: String
+    val widgetTitle: String,
+
+    // Search / shortcuts / accessibility / hero (new)
+    val searchHint: String, val searchNoResults: String,
+    val undo: String, val deleted: String,
+    val offlineBanner: String,
+    val highContrastTitle: String, val highContrastSubtitle: String,
+    val heroChangeToday: String,
+    val shortcutConvert: String, val shortcutMarkets: String, val shortcutCalc: String
 )
 
 val EnglishStrings = Strings(
@@ -144,7 +152,14 @@ val EnglishStrings = Strings(
     onboardTitle4 = "See the Trends", onboardBody4 = "Analytics turns your rate history into charts, so you can spot the moves.",
     onboardSkip = "Skip", onboardNext = "Next", onboardStart = "Get Started",
 
-    widgetTitle = "FXetcher Rates"
+    widgetTitle = "FXetcher Rates",
+
+    searchHint = "Search currencies…", searchNoResults = "No currencies found",
+    undo = "Undo", deleted = "Deleted",
+    offlineBanner = "You're offline — showing cached rates",
+    highContrastTitle = "High Contrast Text", highContrastSubtitle = "Increase text contrast for readability",
+    heroChangeToday = "since app opened",
+    shortcutConvert = "Convert", shortcutMarkets = "Markets", shortcutCalc = "Calculator"
 )
 
 val SwahiliStrings = Strings(
@@ -206,7 +221,14 @@ val SwahiliStrings = Strings(
     onboardTitle4 = "Ona Mienendo", onboardBody4 = "Uchambuzi hubadilisha historia yako ya viwango kuwa michoro, ili uone mabadiliko.",
     onboardSkip = "Ruka", onboardNext = "Endelea", onboardStart = "Anza",
 
-    widgetTitle = "Viwango vya FXetcher"
+    widgetTitle = "Viwango vya FXetcher",
+
+    searchHint = "Tafuta sarafu…", searchNoResults = "Hakuna sarafu iliyopatikana",
+    undo = "Tendua", deleted = "Imefutwa",
+    offlineBanner = "Uko nje ya mtandao — inaonyesha viwango vilivyohifadhiwa",
+    highContrastTitle = "Maandishi Yenye Utofautishaji wa Juu", highContrastSubtitle = "Ongeza utofautishaji wa maandishi kwa usomaji bora",
+    heroChangeToday = "tangu programu ilipofunguliwa",
+    shortcutConvert = "Badilisha", shortcutMarkets = "Masoko", shortcutCalc = "Kikokotoo"
 )
 
 val LocalStrings = staticCompositionLocalOf { EnglishStrings }

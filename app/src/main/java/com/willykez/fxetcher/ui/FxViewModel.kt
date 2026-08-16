@@ -36,7 +36,14 @@ data class UiSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val compactMode: Boolean = false,
-    val homeSort: HomeSort = HomeSort.DEFAULT
+    val homeSort: HomeSort = HomeSort.DEFAULT,
+    val highContrast: Boolean = false
+)
+
+data class SnackbarRequest(
+    val message: String,
+    val actionLabel: String? = null,
+    val onAction: (() -> Unit)? = null
 )
 
 class FxViewModel(app: Application) : AndroidViewModel(app) {
@@ -79,6 +86,11 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     private val _offline = MutableStateFlow(false)
     val offline: StateFlow<Boolean> = _offline
 
+    private val _pendingDeepLink = MutableStateFlow<String?>(null)
+    val pendingDeepLink: StateFlow<String?> = _pendingDeepLink
+    fun setPendingDeepLink(route: String?) { _pendingDeepLink.value = route }
+    fun consumeDeepLink() { _pendingDeepLink.value = null }
+
     val alerts: StateFlow<List<PriceAlert>> = prefs.alertsFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val watchlist: StateFlow<List<String>> = prefs.watchlistFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val convHistory: StateFlow<List<String>> = prefs.convHistoryFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -94,7 +106,8 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
 
     val settings: StateFlow<UiSettings> = combine<Any?, UiSettings>(
         prefs.autoRefreshFlow, prefs.refreshIntervalFlow, prefs.notifyUpdatesFlow,
-        prefs.themeModeFlow, prefs.dynamicColorFlow, prefs.compactModeFlow, prefs.homeSortFlow
+        prefs.themeModeFlow, prefs.dynamicColorFlow, prefs.compactModeFlow, prefs.homeSortFlow,
+        prefs.highContrastFlow
     ) { values ->
         UiSettings(
             autoRefresh = values[0] as Boolean,
@@ -103,12 +116,16 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
             themeMode = values[3] as ThemeMode,
             dynamicColor = values[4] as Boolean,
             compactMode = values[5] as Boolean,
-            homeSort = values[6] as HomeSort
+            homeSort = values[6] as HomeSort,
+            highContrast = values[7] as Boolean
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, UiSettings())
 
-    private val _snackbar = Channel<String>(Channel.BUFFERED)
+    private val _snackbar = Channel<SnackbarRequest>(Channel.BUFFERED)
     val snackbarMessages = _snackbar.receiveAsFlow()
+    private fun snack(message: String, actionLabel: String? = null, onAction: (() -> Unit)? = null) {
+        _snackbar.trySend(SnackbarRequest(message, actionLabel, onAction))
+    }
 
     init {
         viewModelScope.launch {
@@ -171,7 +188,7 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 is RatesRepository.FetchResult.Failure -> {
                     _offline.value = true
-                    _snackbar.trySend("Offline — showing cached rates")
+                    snack("Offline — showing cached rates")
                 }
             }
             _fetching.value = false
@@ -244,29 +261,48 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     fun saveConversion(amount: Double, from: String, to: String, result: Double) = viewModelScope.launch {
         val entry = "${fmtTzs.format(amount)} $from → ${fmtTzs.format(result)} $to"
         prefs.addConversion(entry)
-        _snackbar.trySend("✓ Saved to history")
+        snack("✓ Saved to history")
     }
-    fun deleteConversion(index: Int) = viewModelScope.launch { prefs.deleteConversion(index) }
-    fun clearConversions() = viewModelScope.launch { prefs.clearConversions(); _snackbar.trySend("History cleared") }
+    fun deleteConversion(index: Int) = viewModelScope.launch {
+        val entry = convHistory.value.getOrNull(index) ?: return@launch
+        prefs.deleteConversion(index)
+        snack("Deleted", actionLabel = "Undo") {
+            viewModelScope.launch { prefs.restoreConversion(index, entry) }
+        }
+    }
+    fun clearConversions() = viewModelScope.launch { prefs.clearConversions(); snack("History cleared") }
 
     // ── Calculator history ───────────────────────────────────────────────
     fun saveCalc(entry: String) = viewModelScope.launch { prefs.addCalc(entry) }
-    fun clearCalcHistory() = viewModelScope.launch { prefs.clearCalcHistory(); _snackbar.trySend("History cleared") }
+    fun clearCalcHistory() = viewModelScope.launch { prefs.clearCalcHistory(); snack("History cleared") }
 
     // ── Alerts ────────────────────────────────────────────────────────────
     fun addAlert(currency: String, target: Double, condition: Int) = viewModelScope.launch {
         prefs.addAlert(PriceAlert(currency, target, condition))
-        _snackbar.trySend("✓ Alert created")
+        snack("✓ Alert created")
     }
-    fun deleteAlert(index: Int) = viewModelScope.launch { prefs.deleteAlert(index) }
-    fun clearAlerts() = viewModelScope.launch { prefs.clearAlerts(); _snackbar.trySend("Alerts cleared") }
+    fun deleteAlert(index: Int) = viewModelScope.launch {
+        val alert = alerts.value.getOrNull(index) ?: return@launch
+        prefs.deleteAlert(index)
+        snack("Alert deleted", actionLabel = "Undo") {
+            viewModelScope.launch { prefs.restoreAlert(index, alert) }
+        }
+    }
+    fun clearAlerts() = viewModelScope.launch { prefs.clearAlerts(); snack("Alerts cleared") }
 
     // ── Watchlist ─────────────────────────────────────────────────────────
     fun toggleWatchlist(code: String) = viewModelScope.launch {
+        val wasWatched = watchlist.value.contains(code)
         prefs.toggleWatchlist(code)
-        _snackbar.trySend(if (watchlist.value.contains(code)) "Removed from watchlist" else "Added to watchlist")
+        if (wasWatched) {
+            snack("Removed from watchlist", actionLabel = "Undo") {
+                viewModelScope.launch { prefs.toggleWatchlist(code) }
+            }
+        } else {
+            snack("Added to watchlist")
+        }
     }
-    fun clearWatchlist() = viewModelScope.launch { prefs.clearWatchlist(); _snackbar.trySend("Watchlist cleared") }
+    fun clearWatchlist() = viewModelScope.launch { prefs.clearWatchlist(); snack("Watchlist cleared") }
 
     // ── Settings ──────────────────────────────────────────────────────────
     fun setAutoRefresh(enabled: Boolean) = viewModelScope.launch { prefs.setAutoRefresh(enabled) }
@@ -276,9 +312,10 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     fun setDynamicColor(enabled: Boolean) = viewModelScope.launch { prefs.setDynamicColor(enabled) }
     fun setCompactMode(enabled: Boolean) = viewModelScope.launch { prefs.setCompactMode(enabled) }
     fun setHomeSort(sort: HomeSort) = viewModelScope.launch { prefs.setHomeSort(sort) }
+    fun setHighContrast(enabled: Boolean) = viewModelScope.launch { prefs.setHighContrast(enabled) }
     fun setPinnedPair(from: String, to: String) = viewModelScope.launch {
         prefs.setPinnedPair(from, to)
-        _snackbar.trySend("📌 Pinned: $from → $to")
+        snack("📌 Pinned: $from → $to")
     }
     fun setLanguage(lang: AppLanguage) = viewModelScope.launch { prefs.setLanguage(lang.code) }
     fun completeOnboarding() = viewModelScope.launch { prefs.setOnboardingDone(true) }
@@ -290,6 +327,6 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
         _prevRates.value = emptyMap()
         _rateHistory.value = emptyMap()
         _botRates.value = emptyList()
-        _snackbar.trySend("App data reset")
+        snack("App data reset")
     }
 }

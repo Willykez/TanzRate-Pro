@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="shortcut_convert"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_convert"
+        android:shortcutShortLabel="@string/shortcut_convert_short"
+        android:shortcutLongLabel="@string/shortcut_convert_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.willykez.fxetcher"
+            android:targetClass="com.willykez.fxetcher.MainActivity">
+            <extra android:name="deep_link_route" android:value="convert" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_markets"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_markets"
+        android:shortcutShortLabel="@string/shortcut_markets_short"
+        android:shortcutLongLabel="@string/shortcut_markets_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.willykez.fxetcher"
+            android:targetClass="com.willykez.fxetcher.MainActivity">
+            <extra android:name="deep_link_route" android:value="markets" />
+        </intent>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="shortcut_calc"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_calc"
+        android:shortcutShortLabel="@string/shortcut_calc_short"
+        android:shortcutLongLabel="@string/shortcut_calc_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.willykez.fxetcher"
+            android:targetClass="com.willykez.fxetcher.MainActivity">
+            <extra android:name="deep_link_route" android:value="calc" />
+        </intent>
+    </shortcut>
+
+</shortcuts>

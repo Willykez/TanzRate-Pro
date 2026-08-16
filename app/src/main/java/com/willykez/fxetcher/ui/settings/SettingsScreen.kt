@@ -153,6 +153,10 @@ fun SettingsScreen(vm: FxViewModel) {
                 ToggleRow(strings.compactTitle, strings.compactSubtitle, settings.compactMode) {
                     vm.setCompactMode(it)
                 }
+                Spacer(Modifier.height(10.dp)); HorizontalDivider(); Spacer(Modifier.height(12.dp))
+                ToggleRow(strings.highContrastTitle, strings.highContrastSubtitle, settings.highContrast) {
+                    vm.setHighContrast(it)
+                }
             }
         }
 
