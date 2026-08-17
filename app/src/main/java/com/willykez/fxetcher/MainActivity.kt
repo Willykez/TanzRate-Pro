@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import com.willykez.fxetcher.ui.FxViewModel
 import com.willykez.fxetcher.ui.components.LocalHighContrast
 import com.willykez.fxetcher.ui.nav.AppScaffold
@@ -32,6 +34,11 @@ import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.strings.ProvideStrings
 import com.willykez.fxetcher.ui.theme.FXetcherTheme
 import com.willykez.fxetcher.ui.theme.useDarkTheme
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -44,6 +51,34 @@ class MainActivity : ComponentActivity() {
     private val requestNotificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* no-op: notifications simply won't show if declined */ }
+
+    private val exportBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            val json = vm.buildBackupJson()
+            val success = runCatching {
+                contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                    ?: error("no output stream")
+            }.isSuccess
+            vm.notifyExportSaved(success)
+        }
+    }
+
+    private val importBackupLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            val text = runCatching {
+                contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+            }.getOrNull()
+            // An empty/unparseable string is handled by applyBackupJson itself,
+            // which reports the "not a valid backup" message via the snackbar.
+            vm.applyBackupJson(text ?: "")
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -71,6 +106,18 @@ class MainActivity : ComponentActivity() {
                 val controller = WindowCompat.getInsetsController(window, view)
                 controller.isAppearanceLightStatusBars = !darkTheme
                 controller.isAppearanceLightNavigationBars = !darkTheme
+            }
+
+            LaunchedEffect(Unit) {
+                vm.exportRequests.collectLatest {
+                    val stamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).format(Date())
+                    exportBackupLauncher.launch("fxetcher_backup_$stamp.json")
+                }
+            }
+            LaunchedEffect(Unit) {
+                vm.importRequests.collectLatest {
+                    importBackupLauncher.launch(arrayOf("application/json"))
+                }
             }
 
             FXetcherTheme(themeMode = settings.themeMode, dynamicColor = settings.dynamicColor) {

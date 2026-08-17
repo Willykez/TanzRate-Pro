@@ -13,7 +13,7 @@ data class PriceAlert(
     val enabled: Boolean = true
 )
 
-data class ConversionRecord(val text: String, val timestamp: Long)
+data class PortfolioHolding(val currency: String, val amount: Double, val addedAt: Long, val rateAtAdd: Double)
 
 data class CalcRecord(val text: String, val timestamp: Long)
 
@@ -62,6 +62,28 @@ fun parseAlerts(raw: String): List<PriceAlert> = runCatching {
         PriceAlert(
             o.getString("currency"), o.getDouble("target"),
             o.getInt("cond"), o.optBoolean("enabled", true)
+        )
+    }
+}.getOrDefault(emptyList())
+
+fun List<PortfolioHolding>.toPortfolioJson(): String {
+    val arr = JSONArray()
+    forEach {
+        arr.put(JSONObject().apply {
+            put("currency", it.currency); put("amount", it.amount)
+            put("addedAt", it.addedAt); put("rateAtAdd", it.rateAtAdd)
+        })
+    }
+    return arr.toString()
+}
+
+fun parsePortfolio(raw: String): List<PortfolioHolding> = runCatching {
+    val arr = JSONArray(raw)
+    (0 until arr.length()).map {
+        val o = arr.getJSONObject(it)
+        PortfolioHolding(
+            o.getString("currency"), o.getDouble("amount"),
+            o.getLong("addedAt"), o.getDouble("rateAtAdd")
         )
     }
 }.getOrDefault(emptyList())

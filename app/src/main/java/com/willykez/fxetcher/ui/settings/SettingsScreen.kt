@@ -172,6 +172,28 @@ fun SettingsScreen(vm: FxViewModel) {
 
         item {
             SectionCard {
+                SectionHeader("🧩", strings.widgetConfigTitle, strings.widgetConfigSubtitle, Teal)
+                Spacer(Modifier.height(14.dp))
+                WidgetCurrencyPicker(vm = vm, strings = strings)
+            }
+        }
+
+        item {
+            SectionCard {
+                SectionHeader("📤", strings.backupTitle, strings.backupSubtitle, Blue)
+                Spacer(Modifier.height(14.dp))
+                OutlinedButton(onClick = { vm.requestExportBackup() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("💾 ${strings.exportBackup}")
+                }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = { vm.requestImportBackup() }, modifier = Modifier.fillMaxWidth()) {
+                    Text("📥 ${strings.importBackup}")
+                }
+            }
+        }
+
+        item {
+            SectionCard {
                 SectionHeader("💾", strings.dataManagementTitle, "", Purple)
                 Spacer(Modifier.height(14.dp))
                 OutlinedButton(onClick = {
@@ -321,6 +343,39 @@ private fun IntervalGrid(intervals: List<Pair<Int, String>>, selected: Int, onSe
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun WidgetCurrencyPicker(vm: FxViewModel, strings: com.willykez.fxetcher.ui.strings.Strings) {
+    val current by vm.widgetCurrencies.collectAsState()
+    var selected by remember(current) { mutableStateOf(current.toSet()) }
+    val candidates = remember {
+        (com.willykez.fxetcher.data.CurrencyMeta.LIVE_TOP + listOf("XAU", "XAG") + com.willykez.fxetcher.data.CurrencyMeta.EAST_AFRICA).distinct()
+    }
+
+    Text(strings.widgetPickExactly4, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Spacer(Modifier.height(10.dp))
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        candidates.forEach { code ->
+            val currency = com.willykez.fxetcher.data.CurrencyMeta.of(code)
+            val isSel = selected.contains(code)
+            androidx.compose.material3.FilterChip(
+                selected = isSel,
+                onClick = {
+                    selected = when {
+                        isSel -> selected - code
+                        selected.size < 4 -> selected + code
+                        else -> selected
+                    }
+                    if (selected.size == 4) vm.setWidgetCurrencies(selected.toList())
+                },
+                label = { Text("${currency.flag} $code") }
+            )
         }
     }
 }

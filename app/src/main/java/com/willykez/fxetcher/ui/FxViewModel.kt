@@ -7,6 +7,7 @@ import com.willykez.fxetcher.data.BotRate
 import com.willykez.fxetcher.data.CurrencyMeta
 import com.willykez.fxetcher.data.HomeSort
 import com.willykez.fxetcher.data.PriceAlert
+import com.willykez.fxetcher.data.PortfolioHolding
 import com.willykez.fxetcher.data.RatePoint
 import com.willykez.fxetcher.data.RatesRepository
 import com.willykez.fxetcher.data.ThemeMode
@@ -103,6 +104,9 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     val onboardingDone: StateFlow<Boolean?> = prefs.onboardingDoneFlow
         .map { done -> done as Boolean? }
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val portfolio: StateFlow<List<PortfolioHolding>> = prefs.portfolioFlow.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val widgetCurrencies: StateFlow<List<String>> = prefs.widgetCurrenciesFlow
+        .stateIn(viewModelScope, SharingStarted.Eagerly, UserPreferencesRepository.DEFAULT_WIDGET_CURRENCIES)
 
     val settings: StateFlow<UiSettings> = combine<Any?, UiSettings>(
         prefs.autoRefreshFlow, prefs.refreshIntervalFlow, prefs.notifyUpdatesFlow,
@@ -304,6 +308,22 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     }
     fun clearWatchlist() = viewModelScope.launch { prefs.clearWatchlist(); snack("Watchlist cleared") }
 
+    // ── Portfolio ─────────────────────────────────────────────────────────
+    fun addHolding(currency: String, amount: Double) = viewModelScope.launch {
+        val rate = _rates.value[currency] ?: return@launch
+        prefs.addHolding(PortfolioHolding(currency, amount, System.currentTimeMillis(), rate))
+        snack("✓ Holding added")
+    }
+    fun deleteHolding(index: Int) = viewModelScope.launch {
+        val holding = portfolio.value.getOrNull(index) ?: return@launch
+        prefs.deleteHolding(index)
+        snack("Holding removed", actionLabel = "Undo") {
+            viewModelScope.launch { prefs.restoreHolding(index, holding) }
+        }
+    }
+    fun clearPortfolio() = viewModelScope.launch { prefs.clearPortfolio(); snack("Portfolio cleared") }
+    fun portfolioValueTzs(): Double = portfolio.value.sumOf { h -> (_rates.value[h.currency] ?: 0.0) * h.amount }
+
     // ── Settings ──────────────────────────────────────────────────────────
     fun setAutoRefresh(enabled: Boolean) = viewModelScope.launch { prefs.setAutoRefresh(enabled) }
     fun setRefreshInterval(ms: Int) = viewModelScope.launch { prefs.setRefreshInterval(ms) }
@@ -320,6 +340,29 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     fun setLanguage(lang: AppLanguage) = viewModelScope.launch { prefs.setLanguage(lang.code) }
     fun completeOnboarding() = viewModelScope.launch { prefs.setOnboardingDone(true) }
     fun replayOnboarding() = viewModelScope.launch { prefs.setOnboardingDone(false) }
+    fun setWidgetCurrencies(codes: List<String>) = viewModelScope.launch {
+        prefs.setWidgetCurrencies(codes)
+        runCatching { com.willykez.fxetcher.widget.refreshRatesWidget(getApplication()) }
+        snack("✓ Widget updated")
+    }
+
+    // ── Backup & restore ─────────────────────────────────────────────────
+    private val _exportRequests = Channel<Unit>(Channel.BUFFERED)
+    val exportRequests = _exportRequests.receiveAsFlow()
+    private val _importRequests = Channel<Unit>(Channel.BUFFERED)
+    val importRequests = _importRequests.receiveAsFlow()
+    fun requestExportBackup() { _exportRequests.trySend(Unit) }
+    fun requestImportBackup() { _importRequests.trySend(Unit) }
+
+    suspend fun buildBackupJson(): String = prefs.exportBackupJson()
+
+    fun applyBackupJson(json: String) = viewModelScope.launch {
+        val ok = prefs.importBackupJson(json)
+        snack(if (ok) "✓ Backup restored — restart the app to fully apply it" else "⚠️ That file doesn't look like a valid FXetcher backup")
+    }
+    fun notifyExportSaved(success: Boolean) {
+        snack(if (success) "✓ Backup saved" else "⚠️ Couldn't save backup")
+    }
 
     fun resetAllData() = viewModelScope.launch {
         prefs.resetAll()

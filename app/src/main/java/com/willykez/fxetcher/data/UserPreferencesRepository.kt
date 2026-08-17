@@ -8,7 +8,9 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import org.json.JSONObject
 
 private val Context.dataStore by preferencesDataStore(name = "fxetcher_prefs")
 
@@ -40,6 +42,12 @@ class UserPreferencesRepository(private val context: Context) {
         val LANGUAGE = stringPreferencesKey("app_language")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
         val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
+        val PORTFOLIO = stringPreferencesKey("portfolio_holdings")
+        val WIDGET_CURRENCIES = stringPreferencesKey("widget_currencies")
+    }
+
+    companion object {
+        val DEFAULT_WIDGET_CURRENCIES = listOf("USD", "EUR", "GBP", "XAU")
     }
 
     val ratesFlow: Flow<Map<String, Double>> =
@@ -73,6 +81,10 @@ class UserPreferencesRepository(private val context: Context) {
     val languageFlow: Flow<String> = context.dataStore.data.map { it[Keys.LANGUAGE] ?: "en" }
     val onboardingDoneFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.ONBOARDING_DONE] ?: false }
     val highContrastFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.HIGH_CONTRAST] ?: false }
+    val portfolioFlow: Flow<List<PortfolioHolding>> = context.dataStore.data.map { parsePortfolio(it[Keys.PORTFOLIO] ?: "[]") }
+    val widgetCurrenciesFlow: Flow<List<String>> = context.dataStore.data.map {
+        parseStringList(it[Keys.WIDGET_CURRENCIES] ?: "[]").ifEmpty { DEFAULT_WIDGET_CURRENCIES }
+    }
 
     suspend fun saveRates(rates: Map<String, Double>, previous: Map<String, Double>) {
         context.dataStore.edit {
@@ -154,5 +166,82 @@ class UserPreferencesRepository(private val context: Context) {
     }
     suspend fun clearWatchlist() = context.dataStore.edit { it[Keys.WATCHLIST] = "[]" }
 
+    suspend fun addHolding(holding: PortfolioHolding) = context.dataStore.edit { prefs ->
+        val list = parsePortfolio(prefs[Keys.PORTFOLIO] ?: "[]").toMutableList()
+        list.add(holding)
+        prefs[Keys.PORTFOLIO] = list.toPortfolioJson()
+    }
+    suspend fun deleteHolding(index: Int) = context.dataStore.edit { prefs ->
+        val list = parsePortfolio(prefs[Keys.PORTFOLIO] ?: "[]").toMutableList()
+        if (index in list.indices) list.removeAt(index)
+        prefs[Keys.PORTFOLIO] = list.toPortfolioJson()
+    }
+    suspend fun restoreHolding(index: Int, holding: PortfolioHolding) = context.dataStore.edit { prefs ->
+        val list = parsePortfolio(prefs[Keys.PORTFOLIO] ?: "[]").toMutableList()
+        val at = index.coerceIn(0, list.size)
+        list.add(at, holding)
+        prefs[Keys.PORTFOLIO] = list.toPortfolioJson()
+    }
+    suspend fun clearPortfolio() = context.dataStore.edit { it[Keys.PORTFOLIO] = "[]" }
+
+    suspend fun setWidgetCurrencies(codes: List<String>) = context.dataStore.edit {
+        it[Keys.WIDGET_CURRENCIES] = codes.toJsonArray()
+    }
+
     suspend fun resetAll() = context.dataStore.edit { it.clear() }
+
+    // ── Backup & restore ────────────────────────────────────────────────
+    // Deliberately excludes cached rates/history/BoT data — those are
+    // re-fetched on next launch. Only user-authored data and preferences
+    // are worth round-tripping through a file.
+    suspend fun exportBackupJson(): String {
+        val snapshot = context.dataStore.data.first()
+        val obj = JSONObject()
+        obj.put("backup_version", 1)
+        obj.put("exported_at", System.currentTimeMillis())
+        obj.put("conv_history", snapshot[Keys.CONV_HISTORY] ?: "[]")
+        obj.put("calc_history", snapshot[Keys.CALC_HISTORY] ?: "[]")
+        obj.put("alerts", snapshot[Keys.ALERTS] ?: "[]")
+        obj.put("watchlist", snapshot[Keys.WATCHLIST] ?: "[]")
+        obj.put("portfolio", snapshot[Keys.PORTFOLIO] ?: "[]")
+        obj.put("widget_currencies", snapshot[Keys.WIDGET_CURRENCIES] ?: DEFAULT_WIDGET_CURRENCIES.toJsonArray())
+        obj.put("pinned_from", snapshot[Keys.PINNED_FROM] ?: "USD")
+        obj.put("pinned_to", snapshot[Keys.PINNED_TO] ?: "TZS")
+        obj.put("auto_refresh", snapshot[Keys.AUTO_REFRESH] ?: true)
+        obj.put("refresh_interval", snapshot[Keys.REFRESH_INTERVAL] ?: 300_000)
+        obj.put("notify_updates", snapshot[Keys.NOTIFY_UPDATES] ?: true)
+        obj.put("theme_mode", snapshot[Keys.THEME_MODE] ?: "SYSTEM")
+        obj.put("dynamic_color", snapshot[Keys.DYNAMIC_COLOR] ?: true)
+        obj.put("compact_mode", snapshot[Keys.COMPACT] ?: false)
+        obj.put("home_sort", snapshot[Keys.HOME_SORT] ?: "DEFAULT")
+        obj.put("app_language", snapshot[Keys.LANGUAGE] ?: "en")
+        obj.put("high_contrast", snapshot[Keys.HIGH_CONTRAST] ?: false)
+        return obj.toString(2)
+    }
+
+    /** Returns true if the file looked like a valid FXetcher backup and was applied. */
+    suspend fun importBackupJson(json: String): Boolean = runCatching {
+        val obj = JSONObject(json)
+        if (!obj.has("backup_version")) return@runCatching false
+        context.dataStore.edit { p ->
+            obj.optString("conv_history").takeIf { obj.has("conv_history") }?.let { p[Keys.CONV_HISTORY] = it }
+            obj.optString("calc_history").takeIf { obj.has("calc_history") }?.let { p[Keys.CALC_HISTORY] = it }
+            obj.optString("alerts").takeIf { obj.has("alerts") }?.let { p[Keys.ALERTS] = it }
+            obj.optString("watchlist").takeIf { obj.has("watchlist") }?.let { p[Keys.WATCHLIST] = it }
+            obj.optString("portfolio").takeIf { obj.has("portfolio") }?.let { p[Keys.PORTFOLIO] = it }
+            obj.optString("widget_currencies").takeIf { obj.has("widget_currencies") }?.let { p[Keys.WIDGET_CURRENCIES] = it }
+            if (obj.has("pinned_from")) p[Keys.PINNED_FROM] = obj.getString("pinned_from")
+            if (obj.has("pinned_to")) p[Keys.PINNED_TO] = obj.getString("pinned_to")
+            if (obj.has("auto_refresh")) p[Keys.AUTO_REFRESH] = obj.getBoolean("auto_refresh")
+            if (obj.has("refresh_interval")) p[Keys.REFRESH_INTERVAL] = obj.getInt("refresh_interval")
+            if (obj.has("notify_updates")) p[Keys.NOTIFY_UPDATES] = obj.getBoolean("notify_updates")
+            if (obj.has("theme_mode")) p[Keys.THEME_MODE] = obj.getString("theme_mode")
+            if (obj.has("dynamic_color")) p[Keys.DYNAMIC_COLOR] = obj.getBoolean("dynamic_color")
+            if (obj.has("compact_mode")) p[Keys.COMPACT] = obj.getBoolean("compact_mode")
+            if (obj.has("home_sort")) p[Keys.HOME_SORT] = obj.getString("home_sort")
+            if (obj.has("app_language")) p[Keys.LANGUAGE] = obj.getString("app_language")
+            if (obj.has("high_contrast")) p[Keys.HIGH_CONTRAST] = obj.getBoolean("high_contrast")
+        }
+        true
+    }.getOrDefault(false)
 }

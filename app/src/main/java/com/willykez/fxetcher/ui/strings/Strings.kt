@@ -90,7 +90,14 @@ data class Strings(
     val offlineBanner: String,
     val highContrastTitle: String, val highContrastSubtitle: String,
     val heroChangeToday: String,
-    val shortcutConvert: String, val shortcutMarkets: String, val shortcutCalc: String
+    val shortcutConvert: String, val shortcutMarkets: String, val shortcutCalc: String,
+
+    // Portfolio / backup / widget config (new)
+    val portfolioTitle: String, val portfolioSubtitle: String, val portfolioTotal: String,
+    val portfolioEmpty: String, val addHolding: String, val holdingAmount: String,
+    val portfolioGain: String,
+    val backupTitle: String, val backupSubtitle: String, val exportBackup: String, val importBackup: String,
+    val widgetConfigTitle: String, val widgetConfigSubtitle: String, val widgetPickExactly4: String
 )
 
 val EnglishStrings = Strings(
@@ -159,7 +166,15 @@ val EnglishStrings = Strings(
     offlineBanner = "You're offline — showing cached rates",
     highContrastTitle = "High Contrast Text", highContrastSubtitle = "Increase text contrast for readability",
     heroChangeToday = "since app opened",
-    shortcutConvert = "Convert", shortcutMarkets = "Markets", shortcutCalc = "Calculator"
+    shortcutConvert = "Convert", shortcutMarkets = "Markets", shortcutCalc = "Calculator",
+
+    portfolioTitle = "Portfolio", portfolioSubtitle = "Track what you hold across currencies",
+    portfolioTotal = "Total Value", portfolioEmpty = "No holdings yet. Tap Add Holding to start tracking.",
+    addHolding = "Add Holding", holdingAmount = "Amount held", portfolioGain = "since added",
+    backupTitle = "Backup & Restore", backupSubtitle = "Save or load your data as a file",
+    exportBackup = "Export Backup", importBackup = "Import Backup",
+    widgetConfigTitle = "Widget Currencies", widgetConfigSubtitle = "Choose exactly 4 currencies for the home screen widget",
+    widgetPickExactly4 = "Pick exactly 4"
 )
 
 val SwahiliStrings = Strings(
@@ -228,7 +243,15 @@ val SwahiliStrings = Strings(
     offlineBanner = "Uko nje ya mtandao — inaonyesha viwango vilivyohifadhiwa",
     highContrastTitle = "Maandishi Yenye Utofautishaji wa Juu", highContrastSubtitle = "Ongeza utofautishaji wa maandishi kwa usomaji bora",
     heroChangeToday = "tangu programu ilipofunguliwa",
-    shortcutConvert = "Badilisha", shortcutMarkets = "Masoko", shortcutCalc = "Kikokotoo"
+    shortcutConvert = "Badilisha", shortcutMarkets = "Masoko", shortcutCalc = "Kikokotoo",
+
+    portfolioTitle = "Mali Zangu", portfolioSubtitle = "Fuatilia unachomiliki katika sarafu mbalimbali",
+    portfolioTotal = "Thamani Jumla", portfolioEmpty = "Hakuna mali bado. Gusa Ongeza Mali kuanza kufuatilia.",
+    addHolding = "Ongeza Mali", holdingAmount = "Kiasi kilichomilikiwa", portfolioGain = "tangu kuongezwa",
+    backupTitle = "Hifadhi na Rejesha", backupSubtitle = "Hifadhi au pakia data yako kama faili",
+    exportBackup = "Hamisha Hifadhi", importBackup = "Pakia Hifadhi",
+    widgetConfigTitle = "Sarafu za Widget", widgetConfigSubtitle = "Chagua sarafu 4 hasa kwa widget ya skrini ya nyumbani",
+    widgetPickExactly4 = "Chagua 4 hasa"
 )
 
 val LocalStrings = staticCompositionLocalOf { EnglishStrings }

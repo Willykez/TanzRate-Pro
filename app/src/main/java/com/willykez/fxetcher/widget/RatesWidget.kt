@@ -48,7 +48,7 @@ class RatesWidget : GlanceAppWidget() {
         val rates = prefs.ratesFlow.first().ifEmpty { RatesRepository.fallbackRates() }
         val lastUpdate = prefs.lastUpdateFlow.first()
         val fmt = DecimalFormat("#,##0.00")
-        val featured = listOf("USD", "EUR", "GBP", "XAU")
+        val featured = prefs.widgetCurrenciesFlow.first().ifEmpty { UserPreferencesRepository.DEFAULT_WIDGET_CURRENCIES }
 
         provideContent {
             Column(
