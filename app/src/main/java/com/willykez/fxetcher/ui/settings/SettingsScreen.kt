@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.willykez.fxetcher.ui.settings
 
 import android.content.Intent
