@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -357,6 +359,7 @@ private fun IntervalGrid(intervals: List<Pair<Int, String>>, selected: Int, onSe
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WidgetCurrencyPicker(vm: FxViewModel, strings: com.willykez.fxetcher.ui.strings.Strings) {
     val current by vm.widgetCurrencies.collectAsState()
@@ -367,7 +370,7 @@ private fun WidgetCurrencyPicker(vm: FxViewModel, strings: com.willykez.fxetcher
 
     Text(strings.widgetPickExactly4, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(10.dp))
-    androidx.compose.foundation.layout.FlowRow(
+    FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
