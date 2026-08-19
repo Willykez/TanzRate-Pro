@@ -44,6 +44,8 @@ class UserPreferencesRepository(private val context: Context) {
         val HIGH_CONTRAST = booleanPreferencesKey("high_contrast")
         val PORTFOLIO = stringPreferencesKey("portfolio_holdings")
         val WIDGET_CURRENCIES = stringPreferencesKey("widget_currencies")
+        val ACCENT_THEME = stringPreferencesKey("accent_theme")
+        val AMOLED_MODE = booleanPreferencesKey("amoled_mode")
     }
 
     companion object {
@@ -85,6 +87,10 @@ class UserPreferencesRepository(private val context: Context) {
     val widgetCurrenciesFlow: Flow<List<String>> = context.dataStore.data.map {
         parseStringList(it[Keys.WIDGET_CURRENCIES] ?: "[]").ifEmpty { DEFAULT_WIDGET_CURRENCIES }
     }
+    val accentThemeFlow: Flow<AccentTheme> = context.dataStore.data.map {
+        runCatching { AccentTheme.valueOf(it[Keys.ACCENT_THEME] ?: "GOLD") }.getOrDefault(AccentTheme.GOLD)
+    }
+    val amoledModeFlow: Flow<Boolean> = context.dataStore.data.map { it[Keys.AMOLED_MODE] ?: false }
 
     suspend fun saveRates(rates: Map<String, Double>, previous: Map<String, Double>) {
         context.dataStore.edit {
@@ -187,6 +193,8 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun setWidgetCurrencies(codes: List<String>) = context.dataStore.edit {
         it[Keys.WIDGET_CURRENCIES] = codes.toJsonArray()
     }
+    suspend fun setAccentTheme(theme: AccentTheme) = context.dataStore.edit { it[Keys.ACCENT_THEME] = theme.name }
+    suspend fun setAmoledMode(enabled: Boolean) = context.dataStore.edit { it[Keys.AMOLED_MODE] = enabled }
 
     suspend fun resetAll() = context.dataStore.edit { it.clear() }
 
@@ -216,6 +224,8 @@ class UserPreferencesRepository(private val context: Context) {
         obj.put("home_sort", snapshot[Keys.HOME_SORT] ?: "DEFAULT")
         obj.put("app_language", snapshot[Keys.LANGUAGE] ?: "en")
         obj.put("high_contrast", snapshot[Keys.HIGH_CONTRAST] ?: false)
+        obj.put("accent_theme", snapshot[Keys.ACCENT_THEME] ?: "GOLD")
+        obj.put("amoled_mode", snapshot[Keys.AMOLED_MODE] ?: false)
         return obj.toString(2)
     }
 
@@ -241,6 +251,8 @@ class UserPreferencesRepository(private val context: Context) {
             if (obj.has("home_sort")) p[Keys.HOME_SORT] = obj.getString("home_sort")
             if (obj.has("app_language")) p[Keys.LANGUAGE] = obj.getString("app_language")
             if (obj.has("high_contrast")) p[Keys.HIGH_CONTRAST] = obj.getBoolean("high_contrast")
+            if (obj.has("accent_theme")) p[Keys.ACCENT_THEME] = obj.getString("accent_theme")
+            if (obj.has("amoled_mode")) p[Keys.AMOLED_MODE] = obj.getBoolean("amoled_mode")
         }
         true
     }.getOrDefault(false)

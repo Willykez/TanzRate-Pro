@@ -1,6 +1,7 @@
 package com.willykez.fxetcher.ui.markets
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -205,20 +209,89 @@ private fun RateSectionCard(
         SectionHeader(icon, title, subtitle, accent)
         Spacer(Modifier.height(10.dp))
         HorizontalDivider()
-        Spacer(Modifier.height(8.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            codes.forEachIndexed { i, code ->
-                val r = rates[code]
-                val ov = prevRates[code]
-                val pct = if (ov != null && ov > 0 && r != null) (r - ov) / ov * 100.0 else null
-                val currency = CurrencyMeta.of(code)
-                RateRow(
-                    flag = currency.flag, name = currency.name, code = code,
-                    valueText = r?.let { "${fmt(it)} TZS" } ?: "—", changePct = pct,
-                    accent = accentFor(i), isFavorite = watchlist.contains(code),
-                    sparkline = history[code]?.map { it.value } ?: emptyList(),
-                    onClick = { onRowClick(code) }, onLongClick = { onFavorite(code) },
-                    onFavoriteClick = { onFavorite(code) }
+        Spacer(Modifier.height(10.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            codes.chunked(2).forEachIndexed { rowIndex, pair ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    pair.forEachIndexed { colIndex, code ->
+                        val i = rowIndex * 2 + colIndex
+                        val r = rates[code]
+                        val ov = prevRates[code]
+                        val pct = if (ov != null && ov > 0 && r != null) (r - ov) / ov * 100.0 else null
+                        val currency = CurrencyMeta.of(code)
+                        RateGridTile(
+                            flag = currency.flag, name = currency.name, code = code,
+                            valueText = r?.let { "${fmt(it)} TZS" } ?: "—", changePct = pct,
+                            accent = accentFor(i), isFavorite = watchlist.contains(code),
+                            sparkline = history[code]?.map { it.value } ?: emptyList(),
+                            onClick = { onRowClick(code) }, onFavoriteClick = { onFavorite(code) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RateGridTile(
+    flag: String, name: String, code: String, valueText: String, changePct: Double?,
+    accent: androidx.compose.ui.graphics.Color, isFavorite: Boolean, sparkline: List<Double>,
+    onClick: () -> Unit, onFavoriteClick: () -> Unit, modifier: Modifier = Modifier
+) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(accent, RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp))
+        )
+        Column(Modifier.padding(12.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(flag, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.width(6.dp))
+                    Text(code, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                }
+                IconButton(onClick = onFavoriteClick, modifier = Modifier.size(22.dp)) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Star else Icons.Outlined.StarBorder,
+                        contentDescription = "Favorite",
+                        tint = if (isFavorite) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            Text(
+                name,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(8.dp))
+            if (sparkline.size >= 2) {
+                com.willykez.fxetcher.ui.components.Sparkline(
+                    points = sparkline,
+                    color = if ((changePct ?: 0.0) >= 0) Green else Red,
+                    modifier = Modifier.fillMaxWidth().height(24.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+            Text(valueText, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            if (changePct != null && changePct != 0.0) {
+                val up = changePct >= 0
+                Text(
+                    "${if (up) "▲" else "▼"} ${"%.2f".format(kotlin.math.abs(changePct))}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (up) Green else Red
                 )
             }
         }

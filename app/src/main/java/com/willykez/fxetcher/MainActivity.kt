@@ -120,7 +120,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            FXetcherTheme(themeMode = settings.themeMode, dynamicColor = settings.dynamicColor) {
+            FXetcherTheme(
+                themeMode = settings.themeMode,
+                dynamicColor = settings.dynamicColor,
+                accentTheme = settings.accentTheme,
+                amoled = settings.amoledMode
+            ) {
                 ProvideStrings(language) {
                     CompositionLocalProvider(LocalHighContrast provides settings.highContrast) {
                         Surface(

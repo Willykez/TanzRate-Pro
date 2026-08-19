@@ -97,7 +97,13 @@ data class Strings(
     val portfolioEmpty: String, val addHolding: String, val holdingAmount: String,
     val portfolioGain: String,
     val backupTitle: String, val backupSubtitle: String, val exportBackup: String, val importBackup: String,
-    val widgetConfigTitle: String, val widgetConfigSubtitle: String, val widgetPickExactly4: String
+    val widgetConfigTitle: String, val widgetConfigSubtitle: String, val widgetPickExactly4: String,
+
+    // Accent theme / AMOLED / comparison chart (new)
+    val accentThemeTitle: String, val accentThemeSubtitle: String,
+    val accentGold: String, val accentOcean: String, val accentEmerald: String, val accentSunset: String,
+    val amoledTitle: String, val amoledSubtitle: String,
+    val compareWith: String, val compareNone: String
 )
 
 val EnglishStrings = Strings(
@@ -174,7 +180,12 @@ val EnglishStrings = Strings(
     backupTitle = "Backup & Restore", backupSubtitle = "Save or load your data as a file",
     exportBackup = "Export Backup", importBackup = "Import Backup",
     widgetConfigTitle = "Widget Currencies", widgetConfigSubtitle = "Choose exactly 4 currencies for the home screen widget",
-    widgetPickExactly4 = "Pick exactly 4"
+    widgetPickExactly4 = "Pick exactly 4",
+
+    accentThemeTitle = "Accent Theme", accentThemeSubtitle = "Choose a color palette (applies when Dynamic Color is off)",
+    accentGold = "Gold", accentOcean = "Ocean", accentEmerald = "Emerald", accentSunset = "Sunset",
+    amoledTitle = "True-Black AMOLED", amoledSubtitle = "Pure black background in dark mode to save battery",
+    compareWith = "Compare with", compareNone = "None"
 )
 
 val SwahiliStrings = Strings(
@@ -251,7 +262,12 @@ val SwahiliStrings = Strings(
     backupTitle = "Hifadhi na Rejesha", backupSubtitle = "Hifadhi au pakia data yako kama faili",
     exportBackup = "Hamisha Hifadhi", importBackup = "Pakia Hifadhi",
     widgetConfigTitle = "Sarafu za Widget", widgetConfigSubtitle = "Chagua sarafu 4 hasa kwa widget ya skrini ya nyumbani",
-    widgetPickExactly4 = "Chagua 4 hasa"
+    widgetPickExactly4 = "Chagua 4 hasa",
+
+    accentThemeTitle = "Mandhari ya Rangi", accentThemeSubtitle = "Chagua rangi (hutumika Rangi Zinazobadilika zikiwa zimezimwa)",
+    accentGold = "Dhahabu", accentOcean = "Bahari", accentEmerald = "Zumaridi", accentSunset = "Machweo",
+    amoledTitle = "Weusi Kamili AMOLED", amoledSubtitle = "Mandharinyuma meusi kabisa katika hali ya giza kuokoa betri",
+    compareWith = "Linganisha na", compareNone = "Hakuna"
 )
 
 val LocalStrings = staticCompositionLocalOf { EnglishStrings }

@@ -1,5 +1,6 @@
 package com.willykez.fxetcher.ui.analytics
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +10,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -49,6 +51,7 @@ fun AnalyticsScreen(vm: FxViewModel) {
     val history by vm.rateHistory.collectAsState()
 
     var selected by remember { mutableStateOf("USD") }
+    var compareWith by remember { mutableStateOf<String?>(null) }
     val trackedCodes = remember { (CurrencyMeta.LIVE_TOP + CurrencyMeta.EAST_AFRICA + listOf("XAU", "XAG")).distinct() }
 
     LazyColumn(
@@ -65,7 +68,27 @@ fun AnalyticsScreen(vm: FxViewModel) {
                         val currency = CurrencyMeta.of(code)
                         FilterChip(
                             selected = selected == code,
-                            onClick = { selected = code },
+                            onClick = { selected = code; if (compareWith == code) compareWith = null },
+                            label = { Text("${currency.flag} $code") }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(strings.compareWith, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item {
+                        FilterChip(
+                            selected = compareWith == null,
+                            onClick = { compareWith = null },
+                            label = { Text(strings.compareNone) }
+                        )
+                    }
+                    items(trackedCodes.filter { it != selected }) { code ->
+                        val currency = CurrencyMeta.of(code)
+                        FilterChip(
+                            selected = compareWith == code,
+                            onClick = { compareWith = code },
                             label = { Text("${currency.flag} $code") }
                         )
                     }
@@ -96,7 +119,29 @@ fun AnalyticsScreen(vm: FxViewModel) {
                         color = color
                     )
                     Spacer(Modifier.height(16.dp))
-                    AreaSparkline(points = values, color = color, modifier = Modifier.fillMaxWidth().height(140.dp))
+
+                    val comparePoints = compareWith?.let { history[it]?.map { p -> p.value } }
+                    if (compareWith != null && comparePoints != null && comparePoints.size >= 2) {
+                        val compareCurrency = CurrencyMeta.of(compareWith!!)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            LegendDot(color, "$selected")
+                            Spacer(Modifier.width(14.dp))
+                            LegendDot(Purple, "${compareCurrency.flag} $compareWith")
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        com.willykez.fxetcher.ui.components.DualTrendChart(
+                            pointsA = values, pointsB = comparePoints,
+                            colorA = color, colorB = Purple,
+                            modifier = Modifier.fillMaxWidth().height(140.dp)
+                        )
+                        Text(
+                            "Shown as % change from each currency's first tracked point",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        AreaSparkline(points = values, color = color, modifier = Modifier.fillMaxWidth().height(140.dp))
+                    }
                     Spacer(Modifier.height(20.dp))
                     HorizontalDivider()
                     Spacer(Modifier.height(12.dp))
@@ -138,6 +183,20 @@ private fun StatBlock(label: String, value: String, color: androidx.compose.ui.g
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(2.dp))
         Text(value, style = MaterialTheme.typography.titleSmall, color = color, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun LegendDot(color: androidx.compose.ui.graphics.Color, label: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        androidx.compose.foundation.layout.Box(
+            Modifier
+                .size(10.dp)
+                .clip(androidx.compose.foundation.shape.CircleShape)
+                .background(color)
+        )
+        Spacer(Modifier.width(6.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 

@@ -44,12 +44,14 @@ import androidx.compose.ui.unit.dp
 import com.willykez.fxetcher.data.CurrencyMeta
 import com.willykez.fxetcher.data.RatePoint
 import com.willykez.fxetcher.ui.FxViewModel
+import com.willykez.fxetcher.ui.components.AnimatedRateText
 import com.willykez.fxetcher.ui.components.AreaSparkline
 import com.willykez.fxetcher.ui.components.InfoRow
 import com.willykez.fxetcher.ui.components.QuickConvertSheet
 import com.willykez.fxetcher.ui.components.RateRow
 import com.willykez.fxetcher.ui.components.SectionCard
 import com.willykez.fxetcher.ui.components.SectionHeader
+import com.willykez.fxetcher.ui.components.ShimmerBar
 import com.willykez.fxetcher.ui.components.accentFor
 import com.willykez.fxetcher.ui.strings.LocalStrings
 import com.willykez.fxetcher.ui.theme.Blue
@@ -93,6 +95,7 @@ fun HomeScreen(vm: FxViewModel) {
                     rates = rates,
                     history = rateHistory,
                     fmt = vm.fmtTzs::format,
+                    hasLoaded = vm.lastUpdate.collectAsState().value > 0L,
                     onClick = { quickConvertCode = heroCode }
                 )
             }
@@ -147,6 +150,7 @@ private fun HeroRateCard(
     rates: Map<String, Double>,
     history: Map<String, List<RatePoint>>,
     fmt: (Double) -> String,
+    hasLoaded: Boolean,
     onClick: () -> Unit
 ) {
     val strings = LocalStrings.current
@@ -172,14 +176,20 @@ private fun HeroRateCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    value?.let { "${fmt(it)} TZS" } ?: strings.loading,
-                    style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.semantics(mergeDescendants = true) {
-                        contentDescription = "$heroCode ${value?.let { "${fmt(it)} Tanzanian Shillings" } ?: strings.loading}"
-                    }
-                )
+                if (hasLoaded) {
+                    AnimatedRateText(
+                        value = value,
+                        suffix = "TZS",
+                        style = MaterialTheme.typography.displayLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.semantics(mergeDescendants = true) {
+                            contentDescription = "$heroCode ${value?.let { "${fmt(it)} Tanzanian Shillings" } ?: strings.loading}"
+                        }
+                    )
+                } else {
+                    Spacer(Modifier.height(6.dp))
+                    ShimmerBar(modifier = Modifier.width(200.dp), barHeight = 40.dp, cornerRadius = 10.dp)
+                }
                 if (changePct != null) {
                     Text(
                         "${if (up) "▲" else "▼"} ${DecimalFormat("#,##0.00").format(kotlin.math.abs(changePct))}% ${strings.heroChangeToday}",

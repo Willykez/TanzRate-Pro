@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.willykez.fxetcher.data.BotRate
+import com.willykez.fxetcher.data.AccentTheme
 import com.willykez.fxetcher.data.CurrencyMeta
 import com.willykez.fxetcher.data.HomeSort
 import com.willykez.fxetcher.data.PriceAlert
@@ -38,7 +39,9 @@ data class UiSettings(
     val dynamicColor: Boolean = true,
     val compactMode: Boolean = false,
     val homeSort: HomeSort = HomeSort.DEFAULT,
-    val highContrast: Boolean = false
+    val highContrast: Boolean = false,
+    val accentTheme: AccentTheme = AccentTheme.GOLD,
+    val amoledMode: Boolean = false
 )
 
 data class SnackbarRequest(
@@ -111,7 +114,7 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     val settings: StateFlow<UiSettings> = combine<Any?, UiSettings>(
         prefs.autoRefreshFlow, prefs.refreshIntervalFlow, prefs.notifyUpdatesFlow,
         prefs.themeModeFlow, prefs.dynamicColorFlow, prefs.compactModeFlow, prefs.homeSortFlow,
-        prefs.highContrastFlow
+        prefs.highContrastFlow, prefs.accentThemeFlow, prefs.amoledModeFlow
     ) { values ->
         UiSettings(
             autoRefresh = values[0] as Boolean,
@@ -121,7 +124,9 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
             dynamicColor = values[4] as Boolean,
             compactMode = values[5] as Boolean,
             homeSort = values[6] as HomeSort,
-            highContrast = values[7] as Boolean
+            highContrast = values[7] as Boolean,
+            accentTheme = values[8] as AccentTheme,
+            amoledMode = values[9] as Boolean
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, UiSettings())
 
@@ -333,6 +338,8 @@ class FxViewModel(app: Application) : AndroidViewModel(app) {
     fun setCompactMode(enabled: Boolean) = viewModelScope.launch { prefs.setCompactMode(enabled) }
     fun setHomeSort(sort: HomeSort) = viewModelScope.launch { prefs.setHomeSort(sort) }
     fun setHighContrast(enabled: Boolean) = viewModelScope.launch { prefs.setHighContrast(enabled) }
+    fun setAccentTheme(theme: AccentTheme) = viewModelScope.launch { prefs.setAccentTheme(theme) }
+    fun setAmoledMode(enabled: Boolean) = viewModelScope.launch { prefs.setAmoledMode(enabled) }
     fun setPinnedPair(from: String, to: String) = viewModelScope.launch {
         prefs.setPinnedPair(from, to)
         snack("📌 Pinned: $from → $to")

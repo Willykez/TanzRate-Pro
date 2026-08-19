@@ -19,6 +19,8 @@ data class CalcRecord(val text: String, val timestamp: Long)
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
+enum class AccentTheme { GOLD, OCEAN, EMERALD, SUNSET }
+
 enum class HomeSort { DEFAULT, ALPHA, VALUE }
 
 /** A single point-in-time snapshot of a rate, used to draw sparkline trend charts. */
