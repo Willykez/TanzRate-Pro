@@ -103,7 +103,11 @@ data class Strings(
     val accentThemeTitle: String, val accentThemeSubtitle: String,
     val accentGold: String, val accentOcean: String, val accentEmerald: String, val accentSunset: String,
     val amoledTitle: String, val amoledSubtitle: String,
-    val compareWith: String, val compareNone: String
+    val compareWith: String, val compareNone: String,
+
+    // Nav bar style (new)
+    val navStyleTitle: String, val navStyleSubtitle: String,
+    val navStyleClassic: String, val navStyleLiquidGlass: String
 )
 
 val EnglishStrings = Strings(
@@ -185,7 +189,10 @@ val EnglishStrings = Strings(
     accentThemeTitle = "Accent Theme", accentThemeSubtitle = "Choose a color palette (applies when Dynamic Color is off)",
     accentGold = "Gold", accentOcean = "Ocean", accentEmerald = "Emerald", accentSunset = "Sunset",
     amoledTitle = "True-Black AMOLED", amoledSubtitle = "Pure black background in dark mode to save battery",
-    compareWith = "Compare with", compareNone = "None"
+    compareWith = "Compare with", compareNone = "None",
+
+    navStyleTitle = "Navigation Bar Style", navStyleSubtitle = "Choose how the bottom navigation looks",
+    navStyleClassic = "Classic", navStyleLiquidGlass = "Liquid Glass"
 )
 
 val SwahiliStrings = Strings(
@@ -267,7 +274,10 @@ val SwahiliStrings = Strings(
     accentThemeTitle = "Mandhari ya Rangi", accentThemeSubtitle = "Chagua rangi (hutumika Rangi Zinazobadilika zikiwa zimezimwa)",
     accentGold = "Dhahabu", accentOcean = "Bahari", accentEmerald = "Zumaridi", accentSunset = "Machweo",
     amoledTitle = "Weusi Kamili AMOLED", amoledSubtitle = "Mandharinyuma meusi kabisa katika hali ya giza kuokoa betri",
-    compareWith = "Linganisha na", compareNone = "Hakuna"
+    compareWith = "Linganisha na", compareNone = "Hakuna",
+
+    navStyleTitle = "Mtindo wa Menyu ya Chini", navStyleSubtitle = "Chagua jinsi menyu ya chini inavyoonekana",
+    navStyleClassic = "Kawaida", navStyleLiquidGlass = "Kioo Kioevu"
 )
 
 val LocalStrings = staticCompositionLocalOf { EnglishStrings }

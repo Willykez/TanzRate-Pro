@@ -6,8 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -179,6 +177,14 @@ fun SettingsScreen(vm: FxViewModel) {
                 ToggleRow(strings.notifyUpdatesTitle, strings.notifyUpdatesSubtitle, settings.notifyUpdates) {
                     vm.setNotifyUpdates(it)
                 }
+            }
+        }
+
+        item {
+            SectionCard {
+                SectionHeader("🧭", strings.navStyleTitle, strings.navStyleSubtitle, Purple)
+                Spacer(Modifier.height(14.dp))
+                NavStyleRow(selected = settings.navBarStyle, strings = strings) { vm.setNavBarStyle(it) }
             }
         }
 
@@ -359,7 +365,6 @@ private fun IntervalGrid(intervals: List<Pair<Int, String>>, selected: Int, onSe
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun WidgetCurrencyPicker(vm: FxViewModel, strings: com.willykez.fxetcher.ui.strings.Strings) {
     val current by vm.widgetCurrencies.collectAsState()
@@ -370,7 +375,7 @@ private fun WidgetCurrencyPicker(vm: FxViewModel, strings: com.willykez.fxetcher
 
     Text(strings.widgetPickExactly4, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     Spacer(Modifier.height(10.dp))
-    FlowRow(
+    androidx.compose.foundation.layout.FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -428,6 +433,44 @@ private fun AccentThemeRow(
                     label,
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isSel) color else MaterialTheme.colorScheme.onSurface,
+                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NavStyleRow(
+    selected: com.willykez.fxetcher.data.NavBarStyle,
+    strings: com.willykez.fxetcher.ui.strings.Strings,
+    onSelect: (com.willykez.fxetcher.data.NavBarStyle) -> Unit
+) {
+    val options = listOf(
+        com.willykez.fxetcher.data.NavBarStyle.CLASSIC to strings.navStyleClassic,
+        com.willykez.fxetcher.data.NavBarStyle.LIQUID_GLASS to strings.navStyleLiquidGlass
+    )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        options.forEach { (style, label) ->
+            val isSel = selected == style
+            Column(
+                Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(if (isSel) Blue.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onSelect(style) }
+                    .padding(vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    if (style == com.willykez.fxetcher.data.NavBarStyle.CLASSIC) "▭" else "◜◝",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isSel) Blue else MaterialTheme.colorScheme.onSurface,
                     fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal
                 )
             }

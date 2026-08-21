@@ -21,6 +21,8 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class AccentTheme { GOLD, OCEAN, EMERALD, SUNSET }
 
+enum class NavBarStyle { CLASSIC, LIQUID_GLASS }
+
 enum class HomeSort { DEFAULT, ALPHA, VALUE }
 
 /** A single point-in-time snapshot of a rate, used to draw sparkline trend charts. */

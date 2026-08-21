@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
@@ -58,8 +59,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.willykez.fxetcher.ui.components.GlobalSearchSheet
+import com.willykez.fxetcher.ui.components.GlassNavItem
+import com.willykez.fxetcher.ui.components.LiquidGlassNavBar
 import com.willykez.fxetcher.ui.components.PulsingDot
 import com.willykez.fxetcher.ui.components.QuickConvertSheet
+import com.willykez.fxetcher.data.NavBarStyle
 import com.willykez.fxetcher.ui.theme.Orange
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -99,6 +103,7 @@ fun AppScaffold(vm: FxViewModel) {
     val fetching by vm.fetching.collectAsState()
     val offline by vm.offline.collectAsState()
     val rates by vm.rates.collectAsState()
+    val settings by vm.settings.collectAsState()
     val pendingDeepLink by vm.pendingDeepLink.collectAsState()
     val screenWidthDp = LocalConfiguration.current.screenWidthDp
     val isWideLayout = screenWidthDp >= WIDE_LAYOUT_BREAKPOINT_DP
@@ -237,7 +242,7 @@ fun AppScaffold(vm: FxViewModel) {
                 }
             }
         }
-    } else {
+    } else if (settings.navBarStyle == NavBarStyle.CLASSIC) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = topBar,
@@ -257,6 +262,42 @@ fun AppScaffold(vm: FxViewModel) {
             }
         ) { padding ->
             content(Modifier.padding(padding).fillMaxSize())
+        }
+    } else {
+        // Liquid glass style: the bar floats over the content rather than
+        // reserving its own Scaffold slot, so content gets extra bottom
+        // padding instead to avoid being obscured by it.
+        Box(Modifier.fillMaxSize()) {
+            Scaffold(
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                topBar = topBar
+            ) { padding ->
+                content(
+                    Modifier
+                        .padding(padding)
+                        .fillMaxSize()
+                        .padding(bottom = 100.dp)
+                )
+            }
+
+            val backStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = backStackEntry?.destination?.route
+            val glassItems = destinations.map { dest ->
+                GlassNavItem(
+                    icon = iconFor(dest),
+                    label = labelFor(dest),
+                    selected = currentRoute == dest.route,
+                    onClick = { navigate(dest) }
+                )
+            }
+            LiquidGlassNavBar(
+                items = glassItems,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                    .fillMaxWidth()
+            )
         }
     }
 
