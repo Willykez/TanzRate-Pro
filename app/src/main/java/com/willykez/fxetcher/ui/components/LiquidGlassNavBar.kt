@@ -1,14 +1,17 @@
 package com.willykez.fxetcher.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,15 +27,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 data class GlassNavItem(
     val icon: ImageVector,
@@ -41,17 +54,18 @@ data class GlassNavItem(
     val onClick: () -> Unit
 )
 
-/**
- * A floating, translucent "glass" pill bottom bar with a sliding highlight
- * behind the selected item. True backdrop blur-through requires Android 13+
- * RenderEffect APIs that aren't reliably exposed in Compose yet, so the glass
- * look here is achieved with layered translucency, a soft top highlight, and
- * elevation — the same trick used by most frosted-glass UI before backdrop
- * blur became broadly available.
- */
 @Composable
 fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(32.dp)
+    val density = LocalDensity.current
+    val haptics = LocalHapticFeedback.current
+
+    val bouncySpring = remember {
+        spring<Float>(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        )
+    }
 
     Column(
         modifier
@@ -67,42 +81,56 @@ fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) 
             )
             .background(
                 Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.10f), Color.Transparent),
+                    listOf(Color.White.copy(alpha = 0.10f), Color.Transparent)
                 )
             )
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().height(72.dp)) {
             val itemCount = items.size.coerceAtLeast(1)
-            val slotWidth = maxWidth / itemCount
             val selectedIndex = items.indexOfFirst { it.selected }.coerceAtLeast(0)
-            val indicatorOffset by animateDpAsState(
-                targetValue = slotWidth * selectedIndex,
-                animationSpec = spring(dampingRatio = 0.75f, stiffness = 380f),
-                label = "glassIndicator"
+
+            val slotWidthDp = maxWidth / itemCount
+            val slotWidthPx = with(density) { slotWidthDp.toPx() }
+
+            var isDragging by remember { mutableStateOf(false) }
+            var dragOffsetPx by remember { mutableFloatStateOf(0f) }
+
+            val targetOffsetPx = if (isDragging) dragOffsetPx else slotWidthPx * selectedIndex
+            val animatedOffsetPx by animateFloatAsState(
+                targetValue = targetOffsetPx,
+                animationSpec = if (isDragging) snap() else bouncySpring,
+                label = "glassIndicatorOffset"
+            )
+            val indicatorSquish by animateFloatAsState(
+                targetValue = if (isDragging) 0.90f else 1f,
+                animationSpec = bouncySpring,
+                label = "indicatorSquish"
             )
 
-            androidx.compose.foundation.layout.Box(
+            fun nearestIndex(offsetPx: Float): Int =
+                (offsetPx / slotWidthPx).roundToInt().coerceIn(0, itemCount - 1)
+
+            // Background indicator pill with squish scaling
+            Box(
                 Modifier
-                    .offset(x = indicatorOffset)
+                    .offset { IntOffset(animatedOffsetPx.roundToInt(), 0) }
                     .padding(8.dp)
-                    .width(slotWidth - 16.dp)
+                    .width(slotWidthDp - 16.dp)
                     .fillMaxHeight()
+                    .graphicsLayer { scaleY = indicatorSquish }
                     .clip(RoundedCornerShape(22.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
             )
 
+            // Content row (Icons + Labels)
             Row(Modifier.fillMaxWidth().fillMaxHeight()) {
                 items.forEach { item ->
                     Column(
                         Modifier
                             .weight(1f)
-                            .fillMaxHeight()
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) { item.onClick() },
+                            .fillMaxHeight(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             item.icon,
@@ -119,6 +147,42 @@ fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) 
                     }
                 }
             }
+
+            // Transparent full-overlay touch layer that handles taps & horizontal drags without ripple/shadow overlays
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .pointerInput(itemCount) {
+                        detectTapGestures { offset ->
+                            val idx = nearestIndex(offset.x)
+                            haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            items.getOrNull(idx)?.onClick?.invoke()
+                        }
+                    }
+                    .pointerInput(itemCount) {
+                        detectHorizontalDragGestures(
+                            onDragStart = {
+                                isDragging = true
+                                dragOffsetPx = slotWidthPx * selectedIndex
+                            },
+                            onDragEnd = {
+                                isDragging = false
+                                val idx = nearestIndex(dragOffsetPx)
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                items.getOrNull(idx)?.onClick?.invoke()
+                            },
+                            onDragCancel = { isDragging = false },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                dragOffsetPx = (dragOffsetPx + dragAmount).coerceIn(
+                                    0f,
+                                    slotWidthPx * (itemCount - 1)
+                                )
+                            }
+                        )
+                    }
+            )
         }
     }
 }
