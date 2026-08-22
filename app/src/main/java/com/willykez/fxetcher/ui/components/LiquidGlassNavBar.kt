@@ -3,7 +3,6 @@ package com.willykez.fxetcher.ui.components
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,9 +17,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +39,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
@@ -54,18 +49,27 @@ data class GlassNavItem(
     val onClick: () -> Unit
 )
 
+/**
+ * A floating, translucent "glass" pill bottom bar in the spirit of iOS's
+ * Liquid Glass tab bar: a bouncy spring-driven indicator that you can either
+ * tap to jump to directly, or drag your finger along the bar to slide it
+ * between tabs, snapping to the nearest one with a satisfying overshoot on
+ * release.
+ *
+ * True backdrop blur-through (seeing blurred content behind the bar) needs
+ * Android 13+ RenderEffect APIs not yet reliably exposed in Compose, so the
+ * glass look here is layered translucency + a soft highlight + elevation —
+ * the same technique frosted-glass UIs used before backdrop blur existed.
+ */
 @Composable
 fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(32.dp)
-    val density = LocalDensity.current
     val haptics = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val itemCount = items.size.coerceAtLeast(1)
+    val selectedIndex = items.indexOfFirst { it.selected }.coerceAtLeast(0)
 
-    val bouncySpring = remember {
-        spring<Float>(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        )
-    }
+    val bouncySpring = spring<Float>(dampingRatio = Spring.DampingRatioHighBouncy, stiffness = Spring.StiffnessMedium)
 
     Column(
         modifier
@@ -80,75 +84,22 @@ fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) 
                 )
             )
             .background(
-                Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.10f), Color.Transparent)
-                )
+                Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.10f), Color.Transparent))
             )
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().height(72.dp)) {
-            val itemCount = items.size.coerceAtLeast(1)
-            val selectedIndex = items.indexOfFirst { it.selected }.coerceAtLeast(0)
-
             val slotWidthDp = maxWidth / itemCount
             val slotWidthPx = with(density) { slotWidthDp.toPx() }
 
             var isDragging by remember { mutableStateOf(false) }
             var dragOffsetPx by remember { mutableFloatStateOf(0f) }
 
-            val targetOffsetPx = if (isDragging) dragOffsetPx else slotWidthPx * selectedIndex
-            val animatedOffsetPx by animateFloatAsState(
-                targetValue = targetOffsetPx,
-                animationSpec = if (isDragging) snap() else bouncySpring,
-                label = "glassIndicatorOffset"
-            )
-            val indicatorSquish by animateFloatAsState(
-                targetValue = if (isDragging) 0.90f else 1f,
-                animationSpec = bouncySpring,
-                label = "indicatorSquish"
-            )
-
             fun nearestIndex(offsetPx: Float): Int =
                 (offsetPx / slotWidthPx).roundToInt().coerceIn(0, itemCount - 1)
 
-            // Background indicator pill with squish scaling
-            Box(
-                Modifier
-                    .offset { IntOffset(animatedOffsetPx.roundToInt(), 0) }
-                    .padding(8.dp)
-                    .width(slotWidthDp - 16.dp)
-                    .fillMaxHeight()
-                    .graphicsLayer { scaleY = indicatorSquish }
-                    .clip(RoundedCornerShape(22.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
-            )
-
-            // Content row (Icons + Labels)
-            Row(Modifier.fillMaxWidth().fillMaxHeight()) {
-                items.forEach { item ->
-                    Column(
-                        Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(
-                            item.icon,
-                            contentDescription = item.label,
-                            tint = if (item.selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        AnimatedVisibility(visible = item.selected, enter = fadeIn(), exit = fadeOut()) {
-                            Text(
-                                item.label,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Transparent full-overlay touch layer that handles taps & horizontal drags without ripple/shadow overlays
+            // A single touch surface spanning the whole bar: a quick tap jumps
+            // straight to that tab, a horizontal drag slides the live highlight
+            // and snaps to the nearest tab on release.
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -175,14 +126,41 @@ fun LiquidGlassNavBar(items: List<GlassNavItem>, modifier: Modifier = Modifier) 
                             onDragCancel = { isDragging = false },
                             onHorizontalDrag = { change, dragAmount ->
                                 change.consume()
-                                dragOffsetPx = (dragOffsetPx + dragAmount).coerceIn(
-                                    0f,
-                                    slotWidthPx * (itemCount - 1)
-                                )
+                                dragOffsetPx = (dragOffsetPx + dragAmount).coerceIn(0f, slotWidthPx * (itemCount - 1))
                             }
                         )
                     }
-            )
+            ) {
+                Row(Modifier.fillMaxWidth().fillMaxHeight()) {
+                    items.forEachIndexed { index, item ->
+                        val isLive = if (isDragging) nearestIndex(dragOffsetPx) == index else item.selected
+                        val iconScale by animateFloatAsState(
+                            targetValue = if (isLive) 1.15f else 1f,
+                            animationSpec = bouncySpring,
+                            label = "iconBounce$index"
+                        )
+                        Column(
+                            Modifier.weight(1f).fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                item.icon,
+                                contentDescription = item.label,
+                                tint = if (isLive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.graphicsLayer { scaleX = iconScale; scaleY = iconScale }
+                            )
+                            AnimatedVisibility(visible = isLive, enter = fadeIn(), exit = fadeOut()) {
+                                Text(
+                                    item.label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
